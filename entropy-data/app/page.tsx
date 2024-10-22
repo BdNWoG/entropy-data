@@ -1,4 +1,4 @@
-// app/page.tsx
+// app/page.tsx or pages/index.tsx
 import Header from "../components/Header";
 import PlotPanel from "../components/PlotPanel";
 import CSVPanel from "../components/CSVPanel";
@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 export default function Home() {
   return (
     <div className="min-h-screen bg-dark flex flex-col">
-      {/* Header Bar */}
+      {/* Header */}
       <Header />
 
       {/* Main Content Area */}
@@ -16,7 +16,7 @@ export default function Home() {
         <CSVPanel />
       </main>
 
-      {/* Footer / Customization Panel */}
+      {/* Footer */}
       <Footer />
     </div>
   );
