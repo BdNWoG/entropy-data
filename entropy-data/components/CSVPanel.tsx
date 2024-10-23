@@ -17,12 +17,14 @@ const CSVPanel = () => {
             if (containerRef.current && buttonRowRef.current) {
                 const containerHeight = containerRef.current.clientHeight;
                 const buttonRowHeight = buttonRowRef.current.clientHeight;
-                const availableHeight = containerHeight - buttonRowHeight - 16; // Extra padding/margin
+                const padding = 16; // Adjust for any padding
+
+                const availableHeight = containerHeight - buttonRowHeight - padding;
                 setTableHeight(availableHeight);
             }
         };
 
-        // Calculate height on load and on window resize
+        // Calculate size on load and on window resize
         updateTableHeight();
         window.addEventListener("resize", updateTableHeight);
 
@@ -92,56 +94,61 @@ const CSVPanel = () => {
 
                     {/* Scrollable Table Container */}
                     <div
-                        className="flex-grow overflow-auto border border-borderBlue rounded-md"
+                        className="flex-grow overflow-hidden border border-borderBlue rounded-md"
                         style={{ height: `${tableHeight}px` }}
                     >
-                        <table className="w-full min-w-max table-auto border-collapse">
-                            <thead>
-                                <tr>
-                                    {editableData?.[0].map((header, index) => (
-                                        <th
-                                            key={index}
-                                            className={`border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0 ${
-                                                index === 0 ? 'left-0 z-10' : ''
-                                            }`}
-                                            style={{ backgroundColor: index === 0 ? '#2563eb' : '' }}
-                                        >
-                                            {header}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {editableData?.slice(1).map((row, rowIndex) => (
-                                    <tr key={rowIndex} className="even:bg-panel odd:bg-black">
-                                        {row.map((cell, cellIndex) => (
-                                            <td
-                                                key={cellIndex}
-                                                className={`border border-borderBlue px-4 py-2 text-white ${
-                                                    cellIndex === 0 ? 'sticky left-0 z-10' : ''
+                        <div className="w-full overflow-x-auto">
+                            <table className="min-w-full table-auto border-collapse">
+                                <thead>
+                                    <tr>
+                                        {editableData?.[0].map((header, index) => (
+                                            <th
+                                                key={index}
+                                                className={`border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0 ${
+                                                    index === 0 ? 'left-0 z-10' : ''
                                                 }`}
                                                 style={{
-                                                    backgroundColor: cellIndex === 0 ? '#1e3a8a' : '',
+                                                    backgroundColor: index === 0 ? '#2563eb' : '',
                                                 }}
                                             >
-                                                <input
-                                                    type="text"
-                                                    value={cell}
-                                                    onChange={(e) =>
-                                                        handleEditCell(
-                                                            rowIndex + 1,
-                                                            cellIndex,
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    className="bg-transparent text-white w-full"
-                                                />
-                                            </td>
+                                                {header}
+                                            </th>
                                         ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {editableData?.slice(1).map((row, rowIndex) => (
+                                        <tr key={rowIndex} className="even:bg-panel odd:bg-black">
+                                            {row.map((cell, cellIndex) => (
+                                                <td
+                                                    key={cellIndex}
+                                                    className={`border border-borderBlue px-4 py-2 text-white ${
+                                                        cellIndex === 0 ? 'sticky left-0 z-10' : ''
+                                                    }`}
+                                                    style={{
+                                                        backgroundColor:
+                                                            cellIndex === 0 ? '#1e3a8a' : '',
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="text"
+                                                        value={cell}
+                                                        onChange={(e) =>
+                                                            handleEditCell(
+                                                                rowIndex + 1,
+                                                                cellIndex,
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        className="bg-transparent text-white w-full"
+                                                    />
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             ) : (
