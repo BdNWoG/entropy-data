@@ -1,11 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
 
 const CSVPanel = () => {
     const [csvData, setCsvData] = useState<string[][] | null>(null);
     const [editableData, setEditableData] = useState<string[][] | null>(null);
+    const [tableHeight, setTableHeight] = useState<number>(0);
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const buttonRowRef = useRef<HTMLDivElement | null>(null);
+
+    // Calculate the available height dynamically
+    useEffect(() => {
+        const updateTableHeight = () => {
+            if (containerRef.current && buttonRowRef.current) {
+                const containerHeight = containerRef.current.clientHeight;
+                const buttonRowHeight = buttonRowRef.current.clientHeight;
+                const availableHeight = containerHeight - buttonRowHeight - 16; // Extra padding/margin
+                setTableHeight(availableHeight);
+            }
+        };
+
+        // Calculate height on load and on window resize
+        updateTableHeight();
+        window.addEventListener("resize", updateTableHeight);
+
+        // Cleanup event listener on unmount
+        return () => {
+            window.removeEventListener("resize", updateTableHeight);
+        };
+    }, []);
 
     const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -36,11 +61,14 @@ const CSVPanel = () => {
     };
 
     return (
-        <div className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border">
+        <div
+            ref={containerRef}
+            className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border"
+        >
             {csvData ? (
                 <div className="relative h-full flex flex-col">
                     {/* Import and Cancel Buttons */}
-                    <div className="flex gap-2 mb-4">
+                    <div ref={buttonRowRef} className="flex gap-2 mb-4">
                         <label
                             htmlFor="csv-upload"
                             className="bg-borderBlue text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 transition-colors"
@@ -62,15 +90,21 @@ const CSVPanel = () => {
                         />
                     </div>
 
-                    {/* Scrollable Table */}
-                    <div className="flex-grow overflow-auto">
-                        <table className="w-full min-w-max table-auto border-collapse border border-borderBlue">
+                    {/* Scrollable Table Container */}
+                    <div
+                        className="flex-grow overflow-auto border border-borderBlue rounded-md"
+                        style={{ height: `${tableHeight}px` }}
+                    >
+                        <table className="w-full min-w-max table-auto border-collapse">
                             <thead>
                                 <tr>
                                     {editableData?.[0].map((header, index) => (
                                         <th
                                             key={index}
-                                            className="border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0"
+                                            className={`border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0 ${
+                                                index === 0 ? 'left-0 z-10' : ''
+                                            }`}
+                                            style={{ backgroundColor: index === 0 ? '#2563eb' : '' }}
                                         >
                                             {header}
                                         </th>
@@ -83,7 +117,12 @@ const CSVPanel = () => {
                                         {row.map((cell, cellIndex) => (
                                             <td
                                                 key={cellIndex}
-                                                className="border border-borderBlue px-4 py-2 text-white"
+                                                className={`border border-borderBlue px-4 py-2 text-white ${
+                                                    cellIndex === 0 ? 'sticky left-0 z-10' : ''
+                                                }`}
+                                                style={{
+                                                    backgroundColor: cellIndex === 0 ? '#1e3a8a' : '',
+                                                }}
                                             >
                                                 <input
                                                     type="text"
