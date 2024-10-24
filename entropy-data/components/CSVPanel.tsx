@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
 
 const CSVPanel = () => {
-    const [csvData, setCsvData] = useState<string[][] | null>(null);
-    const [editableData, setEditableData] = useState<string[][] | null>(null);
+    const [editableData, setEditableData] = useState<string[][] | null>(null); // Only use editableData
     const [tableHeight, setTableHeight] = useState<number>(0);
+    const [view, setView] = useState<"initial" | "table">("initial"); // Manage view state
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const buttonRowRef = useRef<HTMLDivElement | null>(null);
@@ -17,18 +17,16 @@ const CSVPanel = () => {
             if (containerRef.current && buttonRowRef.current) {
                 const containerHeight = containerRef.current.clientHeight;
                 const buttonRowHeight = buttonRowRef.current.clientHeight;
-                const padding = 16; // Adjust for any padding
+                const padding = 16;
 
                 const availableHeight = containerHeight - buttonRowHeight - padding;
                 setTableHeight(availableHeight);
             }
         };
 
-        // Calculate size on load and on window resize
         updateTableHeight();
         window.addEventListener("resize", updateTableHeight);
 
-        // Cleanup event listener on unmount
         return () => {
             window.removeEventListener("resize", updateTableHeight);
         };
@@ -39,12 +37,10 @@ const CSVPanel = () => {
         if (file) {
             Papa.parse(file, {
                 complete: (result) => {
-                    setCsvData(result.data as string[][]);
-                    setEditableData(result.data as string[][]); // Set editable version
+                    setEditableData(result.data as string[][]);
+                    setView("table"); // Switch to table view after import
                 },
-                error: (error) => {
-                    console.error("Error parsing CSV:", error);
-                },
+                error: (error) => console.error("Error parsing CSV:", error),
             });
         }
     };
@@ -58,8 +54,41 @@ const CSVPanel = () => {
     };
 
     const handleCancel = () => {
-        setCsvData(null);
         setEditableData(null);
+        setView("initial"); // Go back to the initial view
+    };
+
+    const handleAddRow = () => {
+        if (editableData) {
+            const newRow = new Array(editableData[0].length).fill(""); // Create a blank row
+            setEditableData([...editableData, newRow]);
+        }
+    };
+
+    const handleAddColumn = () => {
+        if (editableData) {
+            const updatedData = editableData.map((row) => [...row, ""]); // Add a blank column
+            setEditableData(updatedData);
+        }
+    };
+
+    const handleDeleteRow = () => {
+        if (editableData && editableData.length > 1) {
+            setEditableData(editableData.slice(0, -1)); // Remove the last row
+        }
+    };
+
+    const handleDeleteColumn = () => {
+        if (editableData && editableData[0].length > 1) {
+            const updatedData = editableData.map((row) => row.slice(0, -1)); // Remove the last column
+            setEditableData(updatedData);
+        }
+    };
+
+    const handleCreateCSV = () => {
+        const blankCSV = Array.from({ length: 3 }, () => new Array(3).fill(""));
+        setEditableData(blankCSV); // Initialize with a 3x3 blank grid
+        setView("table"); // Switch to table view
     };
 
     return (
@@ -67,34 +96,67 @@ const CSVPanel = () => {
             ref={containerRef}
             className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border"
         >
-            {csvData ? (
+            {view === "initial" ? (
+                <div className="h-full flex flex-col items-center justify-center gap-4">
+                    <label
+                        htmlFor="csv-upload"
+                        className="bg-borderBlue text-white px-6 py-3 rounded-md cursor-pointer hover:bg-blue-600 transition-colors"
+                    >
+                        Import CSV
+                    </label>
+                    <input
+                        id="csv-upload"
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCSVUpload}
+                        className="hidden"
+                    />
+                    <button
+                        onClick={handleCreateCSV}
+                        className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors"
+                    >
+                        Create CSV
+                    </button>
+                </div>
+            ) : (
                 <div className="relative h-full flex flex-col">
-                    {/* Import and Cancel Buttons */}
+                    {/* Control Buttons */}
                     <div ref={buttonRowRef} className="flex gap-2 mb-4">
-                        <label
-                            htmlFor="csv-upload"
-                            className="bg-borderBlue text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 transition-colors"
+                        <button
+                            onClick={handleAddRow}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                         >
-                            Import
-                        </label>
+                            Add Row
+                        </button>
+                        <button
+                            onClick={handleAddColumn}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                        >
+                            Add Column
+                        </button>
+                        <button
+                            onClick={handleDeleteRow}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                        >
+                            Delete Row
+                        </button>
+                        <button
+                            onClick={handleDeleteColumn}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                        >
+                            Delete Column
+                        </button>
                         <button
                             onClick={handleCancel}
                             className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
                         >
                             Cancel
                         </button>
-                        <input
-                            id="csv-upload"
-                            type="file"
-                            accept=".csv"
-                            onChange={handleCSVUpload}
-                            className="hidden"
-                        />
                     </div>
 
                     {/* Scrollable Table Container */}
                     <div
-                        className="flex-grow overflow-hidden border border-borderBlue rounded-md"
+                        className="flex-grow overflow-auto border border-borderBlue rounded-md"
                         style={{ height: `${tableHeight}px` }}
                     >
                         <div className="w-full overflow-x-auto">
@@ -105,13 +167,13 @@ const CSVPanel = () => {
                                             <th
                                                 key={index}
                                                 className={`border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0 ${
-                                                    index === 0 ? 'left-0 z-10' : ''
+                                                    index === 0 ? "left-0 z-10" : ""
                                                 }`}
                                                 style={{
-                                                    backgroundColor: index === 0 ? '#2563eb' : '',
+                                                    backgroundColor: index === 0 ? "#2563eb" : "",
                                                 }}
                                             >
-                                                {header}
+                                                {header || `Column ${index + 1}`}
                                             </th>
                                         ))}
                                     </tr>
@@ -123,11 +185,11 @@ const CSVPanel = () => {
                                                 <td
                                                     key={cellIndex}
                                                     className={`border border-borderBlue px-4 py-2 text-white ${
-                                                        cellIndex === 0 ? 'sticky left-0 z-10' : ''
+                                                        cellIndex === 0 ? "sticky left-0 z-10" : ""
                                                     }`}
                                                     style={{
                                                         backgroundColor:
-                                                            cellIndex === 0 ? '#1e3a8a' : '',
+                                                            cellIndex === 0 ? "#1e3a8a" : "",
                                                     }}
                                                 >
                                                     <input
@@ -150,22 +212,6 @@ const CSVPanel = () => {
                             </table>
                         </div>
                     </div>
-                </div>
-            ) : (
-                <div className="h-full flex flex-col items-center justify-center">
-                    <label
-                        htmlFor="csv-upload"
-                        className="bg-borderBlue text-white px-6 py-3 rounded-md cursor-pointer hover:bg-blue-600 transition-colors"
-                    >
-                        Import CSV
-                    </label>
-                    <input
-                        id="csv-upload"
-                        type="file"
-                        accept=".csv"
-                        onChange={handleCSVUpload}
-                        className="hidden"
-                    />
                 </div>
             )}
         </div>
