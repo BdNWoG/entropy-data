@@ -1,22 +1,22 @@
-// app/page.tsx or pages/index.tsx
+"use client"
+
+import { useState } from "react";
 import Header from "../components/Header";
-import PlotPanel from "../components/PlotPanel";
-import CSVPanel from "../components/CSVPanel";
 import Footer from "../components/Footer";
+import CSVPanel from "../components/CSVPanel";
+import PlotPanel from "../components/PlotPanel";
+import { PlotData } from "../components/types";
 
 export default function Home() {
+  const [plotData, setPlotData] = useState<PlotData | null>(null);
+
   return (
     <div className="min-h-screen bg-dark flex flex-col">
-      {/* Header */}
       <Header />
-
-      {/* Main Content Area */}
-      <main className="flex-grow flex p-6 gap-6">
-        <PlotPanel />
-        <CSVPanel />
-      </main>
-
-      {/* Footer */}
+      <div className="flex-grow flex">
+        <PlotPanel plotData={plotData} />
+        <CSVPanel setPlotData={setPlotData} />
+      </div>
       <Footer />
     </div>
   );
