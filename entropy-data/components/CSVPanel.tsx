@@ -23,9 +23,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
         const containerHeight = containerRef.current.clientHeight;
         const buttonRowHeight = buttonRowRef.current.clientHeight;
         const padding = 16;
-
-        const availableHeight = containerHeight - buttonRowHeight - padding;
-        setTableHeight(availableHeight);
+        setTableHeight(containerHeight - buttonRowHeight - padding);
       }
     };
 
@@ -55,23 +53,15 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const processCSVData = (data: string[][]) => {
     if (!data || data.length < 2) return; // Ensure valid data
 
-    const headers = data[0]; // Extract headers from the first row
-    const xIndex = headers.indexOf("timestamp"); // Identify timestamp column
-    const yIndex = headers.indexOf("value"); // Identify value column
+    const xValues = data.slice(1).map((row) => row[0]); // First column as x-axis
+    const plotData: PlotData = {};
 
-    if (xIndex === -1 || yIndex === -1) {
-      console.error("CSV must contain 'timestamp' and 'value' columns.");
-      return;
-    }
-
-    const plotData: PlotData = {
-      dataset: { timestamp: [], value: [] },
-    };
-
-    // Extract data from the CSV and populate the plotData object
-    data.slice(1).forEach((row) => {
-      plotData.dataset.timestamp.push(row[xIndex]); // Add timestamps
-      plotData.dataset.value.push(parseFloat(row[yIndex])); // Add values
+    data[0].slice(1).forEach((header, columnIndex) => {
+      // Populate plot data for each line (skip first column header)
+      plotData[header] = {
+        timestamp: xValues,
+        value: data.slice(1).map((row) => parseFloat(row[columnIndex + 1] || "0")),
+      };
     });
 
     setPlotData(plotData); // Send the processed data to PlotPanel
