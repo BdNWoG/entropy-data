@@ -5,7 +5,7 @@ import Papa from "papaparse";
 import { PlotData } from "./types"; // Import the shared PlotData type
 
 interface CSVPanelProps {
-  setPlotData: (data: PlotData) => void; // Prop to send plot data to PlotPanel
+  setPlotData: (data: PlotData | null) => void; // Prop to send plot data to PlotPanel
 }
 
 const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
@@ -77,6 +77,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
 
   const handleCancel = () => {
     setEditableData(null);
+    setPlotData(null);
     setView("initial"); // Switch back to the initial view
   };
 
@@ -112,6 +113,12 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     setEditableData(blankCSV); // Initialize with a 3x3 blank grid
     setView("table"); // Switch to table view
   };
+
+  useEffect(() => {
+    if (view === "initial") {
+      setPlotData(null); // Clear the plot data when view is initial
+    }
+  }, [view, setPlotData]);
 
   return (
     <div
