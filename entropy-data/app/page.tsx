@@ -14,15 +14,15 @@ export default function Home() {
   const plotRef = useRef<HTMLDivElement | null>(null);
 
   const [customization, setCustomization] = useState<Customization>({
-    title: "Total $ Value in Canonical Bridges",
-    subtitle: "Other includes Mantle, Linea, and Starknet",
+    title: "",
+    subtitle: "",
     xAxisTitle: "Date",
     yAxisTitle: "Value",
     yAxisPrefix: "$",
     yAxisMax: "",
     showGrid: true,
     xAxisType: "date",
-    source: "Source: DeFi Llama",
+    source: "Source: ",
     fill: true,
     stacked: true,
     chartType: "line",

@@ -76,8 +76,9 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   };
 
   const handleCancel = () => {
+    console.log("Cancel button pressed, clearing plot data.");
     setEditableData(null);
-    setPlotData(null);
+    setPlotData(null);  // Clear the plot data in PlotPanel
     setView("initial"); // Switch back to the initial view
   };
 
