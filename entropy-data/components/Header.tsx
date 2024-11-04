@@ -1,4 +1,3 @@
-// components/Header.tsx
 "use client";
 
 import { useState } from "react";
@@ -14,34 +13,33 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ plotRef }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const actions = [
-    { icon: AiOutlineCopy, label: "Copy", onClick: copyPlot },
-    { icon: AiOutlineSave, label: "Save", onClick: savePlot },
-    { icon: AiOutlinePicture, label: "Add Logo" },
-    { icon: FiSettings, label: "Change Theme" },
-    { icon: MdColorLens, label: "Customize Colors" },
-    { icon: FiLogIn, label: "Sign In" },
-    { icon: FiStar, label: "Upgrade" },
-  ];
-
   const toggleProfilePopup = () => {
     setIsProfileOpen(!isProfileOpen);
   };
 
-  // Function to copy plot to clipboard
+  // Function to copy plot to clipboard with fallback
   async function copyPlot() {
     if (plotRef.current) {
-      const imageDataUrl = await Plotly.toImage(plotRef.current, { format: "png", width: 800, height: 600 });
       try {
-        const blob = await (await fetch(imageDataUrl)).blob();
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "image/png": blob,
-          }),
-        ]);
-        alert("Plot copied to clipboard!");
+        const imageDataUrl = await Plotly.toImage(plotRef.current, { format: "png", width: 800, height: 600 });
+  
+        // Attempt to copy image directly if ClipboardItem is supported
+        if (typeof ClipboardItem !== "undefined") {
+          const blob = await (await fetch(imageDataUrl)).blob();
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "image/png": blob,
+            }),
+          ]);
+          alert("Plot copied to clipboard as an image!");
+        } else {
+          // Alert user if ClipboardItem is not supported
+          alert("Your browser does not support copying images directly to the clipboard. Please update your browser or try a different one.");
+        }
+  
       } catch (error) {
-        console.error("Failed to copy plot:", error);
+        console.error("Failed to copy plot as image:", error);
+        alert("Failed to copy plot as an image. Please try again.");
       }
     }
   }
@@ -53,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef }) => {
         await Plotly.downloadImage(plotRef.current, { format: "png", width: 800, height: 600, filename: "plot" });
       } catch (error) {
         console.error("Failed to save plot:", error);
+        alert("Failed to save plot. Please try again.");
       }
     }
   }
@@ -62,16 +61,46 @@ const Header: React.FC<HeaderProps> = ({ plotRef }) => {
       <div className="text-3xl font-semibold mr-auto">Dashboard</div>
 
       <div className="flex flex-grow justify-around items-center gap-4">
-        {actions.map((action, index) => (
-          <div
-            key={index}
-            className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
-            onClick={action.onClick}
-          >
-            <action.icon className="h-8 w-8 text-borderBlue mb-2" />
-            <span className="text-sm text-center">{action.label}</span>
-          </div>
-        ))}
+        <div
+          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
+          onClick={copyPlot}
+        >
+          <AiOutlineCopy className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Copy</span>
+        </div>
+
+        <div
+          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
+          onClick={savePlot}
+        >
+          <AiOutlineSave className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Save</span>
+        </div>
+
+        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
+          <AiOutlinePicture className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Add Logo</span>
+        </div>
+
+        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
+          <FiSettings className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Change Theme</span>
+        </div>
+
+        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
+          <MdColorLens className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Customize Colors</span>
+        </div>
+
+        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
+          <FiLogIn className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Sign In</span>
+        </div>
+
+        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
+          <FiStar className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Upgrade</span>
+        </div>
       </div>
 
       <div className="ml-6 relative">

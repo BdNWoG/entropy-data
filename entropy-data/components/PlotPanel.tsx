@@ -14,22 +14,22 @@ interface Customization {
   showGrid: boolean;
   xAxisType: "date" | "category" | "linear";
   source: string;
-  fill: boolean;           // Determines if line chart is filled
-  stacked: boolean;        // Determines if charts are stacked
-  chartType: "line" | "bar"; // Choose between line or bar chart
+  fill: boolean;
+  stacked: boolean;
+  chartType: "line" | "bar";
 }
 
 interface PlotPanelProps {
   plotData: PlotData | null;
   customization: Customization;
-  plotRef: React.RefObject<HTMLDivElement>; // Accept plotRef for copy/save functionality
+  plotRef: React.RefObject<HTMLDivElement>;
 }
 
 const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef }) => {
   const internalPlotRef = useRef<HTMLDivElement | null>(null);
 
-  // Forward ref to expose methods for copying and saving
-  useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement, []);
+  // Expose internalPlotRef to plotRef passed from Home component
+  useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement);
 
   useEffect(() => {
     if (plotData && internalPlotRef.current) {
@@ -41,7 +41,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
         name: label,
         fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
         stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
-        marker: { color: getColor(index) }, // Apply colors for bars
+        marker: { color: getColor(index) },
         line: customization.chartType === "line" ? { width: 3, color: getColor(index) } : undefined,
         fillcolor: customization.chartType === "line" && customization.fill ? getFillColor(index) : undefined,
       }));
@@ -131,7 +131,6 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
 
       Plotly.react(internalPlotRef.current, traces, layout);
     } else if (internalPlotRef.current) {
-      // Clear the plot if no data
       Plotly.purge(internalPlotRef.current);
       internalPlotRef.current.innerHTML = "";
     }
@@ -143,7 +142,6 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
         <div
           ref={internalPlotRef}
           style={{ width: "100%", height: "100%" }}
-          key={plotData ? "plot-container" : "empty-container"}
         />
       ) : (
         <div className="flex items-center justify-center h-full text-white">
