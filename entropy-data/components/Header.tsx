@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef }) => {
   async function savePlot() {
     if (plotRef.current) {
       try {
-        await Plotly.downloadImage(plotRef.current, { format: "png", width: 800, height: 600, filename: "plot" });
+        await Plotly.downloadImage(plotRef.current, { format: "png", width: 1600, height: 1200, filename: "plot" });
       } catch (error) {
         console.error("Failed to save plot:", error);
         alert("Failed to save plot. Please try again.");

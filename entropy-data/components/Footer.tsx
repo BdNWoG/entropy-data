@@ -1,4 +1,3 @@
-// components/Footer.tsx
 import React, { useState } from "react";
 import { Customization } from "../components/types";
 
@@ -8,9 +7,7 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
-  // State to toggle between sets of options
   const [showingFirstSet, setShowingFirstSet] = useState(true);
-  const [chartType, setChartType] = useState<"line" | "bar">("line");
 
   const handleToggleSet = () => setShowingFirstSet(!showingFirstSet);
 
@@ -22,8 +19,8 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
           <div>
             <label className="mr-2">Chart Type:</label>
             <select
-              value={chartType}
-              onChange={(e) => setChartType(e.target.value as "line" | "bar")}
+              value={customization.chartType}
+              onChange={(e) => setCustomization({ chartType: e.target.value as "line" | "bar" })}
               className="bg-borderBlue text-white px-3 py-2 rounded-md"
             >
               <option value="line">Line Chart</option>
@@ -40,7 +37,6 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
       </div>
 
       <div className="grid gap-4 grid-cols-4">
-        {/* Toggle between two sets of options */}
         {showingFirstSet ? (
           <>
             <div>
