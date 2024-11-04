@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";
 import PlotPanel from "../components/PlotPanel";
-import { PlotData, Customization } from "../components/types"; // Import Customization type
+import { PlotData, Customization } from "../components/types";
 
 export default function Home() {
   const [plotData, setPlotData] = useState<PlotData | null>(null);
+  
+  // Reference to the plot container div in PlotPanel
+  const plotRef = useRef<HTMLDivElement | null>(null);
 
   // Define customization state with default values and correct types
   const [customization, setCustomization] = useState<Customization>({
@@ -35,10 +38,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-dark flex flex-col">
-      <Header />
+      {/* Pass plotRef to Header so it can handle "Copy" and "Save" functionalities */}
+      <Header plotRef={plotRef} />
       <div className="flex-grow flex">
-        {/* Pass plotData and customization to PlotPanel */}
-        <PlotPanel plotData={plotData} customization={customization} />
+        {/* Pass plotData, customization, and plotRef to PlotPanel */}
+        <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
         {/* Pass setPlotData to CSVPanel */}
         <CSVPanel setPlotData={setPlotData} />
       </div>

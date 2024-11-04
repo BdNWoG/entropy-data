@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useImperativeHandle } from "react";
 import Plotly, { Layout, Data } from "plotly.js-dist-min";
 import { PlotData } from "./types";
 
@@ -14,21 +14,25 @@ interface Customization {
   showGrid: boolean;
   xAxisType: "date" | "category" | "linear";
   source: string;
-  fill: boolean;           // New property to determine if line chart is filled
-  stacked: boolean;        // New property to determine if charts are stacked
-  chartType: "line" | "bar"; // New property to choose chart type
+  fill: boolean;           // Determines if line chart is filled
+  stacked: boolean;        // Determines if charts are stacked
+  chartType: "line" | "bar"; // Choose between line or bar chart
 }
 
 interface PlotPanelProps {
   plotData: PlotData | null;
   customization: Customization;
+  plotRef: React.RefObject<HTMLDivElement>; // Accept plotRef for copy/save functionality
 }
 
-const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization }) => {
-  const plotRef = useRef<HTMLDivElement | null>(null);
+const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef }) => {
+  const internalPlotRef = useRef<HTMLDivElement | null>(null);
+
+  // Forward ref to expose methods for copying and saving
+  useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement, []);
 
   useEffect(() => {
-    if (plotData && plotRef.current) {
+    if (plotData && internalPlotRef.current) {
       const traces: Data[] = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
         x: timestamp,
         y: value,
@@ -125,11 +129,11 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization }) => {
         barmode: customization.stacked && customization.chartType === "bar" ? "stack" : undefined,
       };
 
-      Plotly.react(plotRef.current, traces, layout);
-    } else if (plotRef.current) {
-      // Ensure complete removal by unmounting and clearing the innerHTML
-      Plotly.purge(plotRef.current);
-      plotRef.current.innerHTML = "";
+      Plotly.react(internalPlotRef.current, traces, layout);
+    } else if (internalPlotRef.current) {
+      // Clear the plot if no data
+      Plotly.purge(internalPlotRef.current);
+      internalPlotRef.current.innerHTML = "";
     }
   }, [plotData, customization]);
 
@@ -137,7 +141,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization }) => {
     <div className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border">
       {plotData ? (
         <div
-          ref={plotRef}
+          ref={internalPlotRef}
           style={{ width: "100%", height: "100%" }}
           key={plotData ? "plot-container" : "empty-container"}
         />
