@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
-import { PlotData } from "./types"; // Import the shared PlotData type
+import { PlotData } from "./types";
 
 interface CSVPanelProps {
-  setPlotData: (data: PlotData | null) => void; // Prop to send plot data to PlotPanel
+  setPlotData: (data: PlotData | null) => void;
 }
 
 const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
@@ -16,7 +16,6 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
 
-  // Calculate the available height dynamically
   useEffect(() => {
     const updateTableHeight = () => {
       if (containerRef.current && buttonRowRef.current) {
@@ -41,9 +40,8 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       Papa.parse(file, {
         complete: (result) => {
           const data = result.data as string[][]; // Parsed CSV data
-          setEditableData(data); // Update table with CSV data
-          setView("table"); // Switch to table view
-          processCSVData(data); // Process the CSV data for plotting
+          setEditableData(data);
+          setView("table");
         },
         error: (error) => console.error("Error parsing CSV:", error),
       });
@@ -51,79 +49,84 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   };
 
   const processCSVData = (data: string[][]) => {
-    if (!data || data.length < 2) return; // Ensure valid data
+    if (!data || data.length < 2) return;
 
-    const xValues = data.slice(1).map((row) => row[0]); // First column as x-axis
+    const xValues = data.slice(1).map((row) => row[0]);
     const plotData: PlotData = {};
 
     data[0].slice(1).forEach((header, columnIndex) => {
-      // Populate plot data for each line (skip first column header)
       plotData[header] = {
         timestamp: xValues,
         value: data.slice(1).map((row) => parseFloat(row[columnIndex + 1] || "0")),
       };
     });
 
-    setPlotData(plotData); // Send the processed data to PlotPanel
+    console.log("Updated plotData:", plotData); // Debug log to verify data
+    setPlotData(plotData);
   };
 
   const handleEditCell = (rowIndex: number, cellIndex: number, value: string) => {
-    if (editableData) {
-      const updatedData = [...editableData];
-      updatedData[rowIndex][cellIndex] = value;
-      setEditableData(updatedData);
-      processCSVData(updatedData); // Update the plot with the new data after editing a cell
-    }
+    setEditableData((prevData) => {
+      if (prevData) {
+        const updatedData = [...prevData];
+        updatedData[rowIndex][cellIndex] = value;
+        return updatedData;
+      }
+      return prevData;
+    });
   };
 
   const handleCancel = () => {
-    console.log("Cancel button pressed, clearing plot data.");
     setEditableData(null);
-    setPlotData(null);  // Clear the plot data in PlotPanel
-    setView("initial"); // Switch back to the initial view
+    setPlotData(null);
+    setView("initial");
   };
 
   const handleAddRow = () => {
     if (editableData) {
-      const newRow = new Array(editableData[0].length).fill(""); // Create a blank row
+      const newRow = new Array(editableData[0].length).fill("");
       setEditableData([...editableData, newRow]);
     }
   };
 
   const handleAddColumn = () => {
     if (editableData) {
-      const updatedData = editableData.map((row) => [...row, ""]); // Add a blank column
+      const updatedData = editableData.map((row) => [...row, ""]);
       setEditableData(updatedData);
     }
   };
 
   const handleDeleteRow = () => {
     if (editableData && editableData.length > 1) {
-      const updatedData = editableData.slice(0, -1); // Remove the last row
+      const updatedData = editableData.slice(0, -1);
       setEditableData(updatedData);
-      processCSVData(updatedData); // Update the plot after deleting a row
     }
   };
 
   const handleDeleteColumn = () => {
     if (editableData && editableData[0].length > 1) {
-      const updatedData = editableData.map((row) => row.slice(0, -1)); // Remove the last column
+      const updatedData = editableData.map((row) => row.slice(0, -1));
       setEditableData(updatedData);
-      processCSVData(updatedData); // Update the plot after deleting a column
     }
   };
 
   const handleCreateCSV = () => {
     const blankCSV = Array.from({ length: 3 }, () => new Array(3).fill(""));
-    setEditableData(blankCSV); // Initialize with a 3x3 blank grid
-    setView("table"); // Switch to table view
+    setEditableData(blankCSV);
+    setView("table");
   };
 
   useEffect(() => {
     if (view === "initial") {
-      setPlotData(null); // Clear the plot data when view is initial
+      setPlotData(null);
     }
   }, [view, setPlotData]);
+
+  useEffect(() => {
+    if (editableData) {
+      processCSVData(editableData);
+    }
+  }, [editableData]);
 
   return (
     <div

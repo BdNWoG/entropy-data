@@ -1,5 +1,5 @@
 TODO:
 
 Bar chart
-When modify update
 When copy or save in the right placements
+Resolution
