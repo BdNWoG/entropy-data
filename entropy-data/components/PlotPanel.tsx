@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Plotly, { Layout, Data } from "plotly.js-dist-min"; // Correct Plotly import
-import { PlotData } from "./types"; // Import your PlotData type
+import Plotly, { Layout, Data } from "plotly.js-dist-min";
+import { PlotData } from "./types";
 
 interface PlotPanelProps {
-  plotData: PlotData | null; // Receive processed data from CSVPanel
+  plotData: PlotData | null;
 }
 
 const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
-  const plotRef = useRef<HTMLDivElement | null>(null); // Create ref to the plot container
+  const plotRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (plotData && plotRef.current) {
@@ -17,12 +17,12 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
         x: timestamp,
         y: value,
         type: "scatter",
-        mode: "lines", // Line plot only
+        mode: "lines",
         name: label,
-        fill: "tonexty", // Fill area under the line
-        stackgroup: "one", // Enable stacking of plots
-        line: { width: 3, color: getColor(index) }, // Custom line color
-        fillcolor: getFillColor(index), // Transparent fill color
+        fill: "tonexty",
+        stackgroup: "one",
+        line: { width: 3, color: getColor(index) },
+        fillcolor: getFillColor(index),
       }));
 
       const layout: Partial<Layout> = {
@@ -72,7 +72,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
         margin: { l: 100, r: 100, t: 100, b: 80 },
         images: [
           {
-            source: "https://i.imgur.com/1u4DIOJ.png", // Logo URL
+            source: "https://i.imgur.com/1u4DIOJ.png",
             xref: "paper",
             yref: "paper",
             x: 0.5,
@@ -104,24 +104,37 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
         ],
       };
 
-      Plotly.newPlot(plotRef.current, traces, layout);
+      Plotly.react(plotRef.current, traces, layout);
+    } else if (plotRef.current) {
+      // Ensure complete removal by unmounting and clearing the innerHTML
+      Plotly.purge(plotRef.current);
+      plotRef.current.innerHTML = "";
     }
-  }, [plotData]); // Re-run when plotData changes
+  }, [plotData]);
 
   return (
     <div className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border">
-      <div ref={plotRef} style={{ width: "100%", height: "100%" }} /> {/* Plot container */}
+      {plotData ? (
+        // Conditionally render the chart container only when plotData exists
+        <div
+          ref={plotRef}
+          style={{ width: "100%", height: "100%" }}
+          key={plotData ? "plot-container" : "empty-container"} // Force DOM reset with unique key
+        />
+      ) : (
+        <div className="flex items-center justify-center h-full text-white">
+          <p>No data to display. Please import or create CSV data.</p>
+        </div>
+      )}
     </div>
   );
 };
 
-// Helper function to assign colors based on index
 const getColor = (index: number) => {
   const colors = ["#12AAFF", "#f50557", "#2ca02c", "#f57c00", "#ccccff"];
   return colors[index % colors.length];
 };
 
-// Helper function to assign fill colors based on index
 const getFillColor = (index: number) => {
   const fillColors = [
     "rgba(18, 170, 255, 0.5)",
