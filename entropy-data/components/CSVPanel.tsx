@@ -72,6 +72,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       const updatedData = [...editableData];
       updatedData[rowIndex][cellIndex] = value;
       setEditableData(updatedData);
+      processCSVData(updatedData); // Update the plot with the new data after editing a cell
     }
   };
 
@@ -98,7 +99,9 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
 
   const handleDeleteRow = () => {
     if (editableData && editableData.length > 1) {
-      setEditableData(editableData.slice(0, -1)); // Remove the last row
+      const updatedData = editableData.slice(0, -1); // Remove the last row
+      setEditableData(updatedData);
+      processCSVData(updatedData); // Update the plot after deleting a row
     }
   };
 
@@ -106,6 +109,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     if (editableData && editableData[0].length > 1) {
       const updatedData = editableData.map((row) => row.slice(0, -1)); // Remove the last column
       setEditableData(updatedData);
+      processCSVData(updatedData); // Update the plot after deleting a column
     }
   };
 
