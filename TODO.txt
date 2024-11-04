@@ -1,0 +1,7 @@
+TODO:
+
+Bar chart
+When delete column or delete row update
+When modify update
+when cancel disappear
+When copy or save in the right placements
