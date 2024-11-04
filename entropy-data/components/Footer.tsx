@@ -1,101 +1,135 @@
 // components/Footer.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Customization } from "../components/types";
 
 interface FooterProps {
-    customization: Customization;
-    setCustomization: (customization: Partial<Customization>) => void;
-  }
+  customization: Customization;
+  setCustomization: (customization: Partial<Customization>) => void;
+}
 
 const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
+  // State to toggle between sets of options
+  const [showingFirstSet, setShowingFirstSet] = useState(true);
+  const [chartType, setChartType] = useState<"line" | "bar">("line");
+
+  const handleToggleSet = () => setShowingFirstSet(!showingFirstSet);
+
   return (
     <footer className="bg-panel text-white h-64 p-8 shadow-lg">
-      <h2 className="text-2xl mb-6">Customization</h2>
-      <div className="grid gap-4 grid-cols-2">
-        <div>
-          <label className="block mb-2">Title</label>
-          <input
-            type="text"
-            value={customization.title}
-            onChange={(e) => setCustomization({ title: e.target.value })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">Subtitle</label>
-          <input
-            type="text"
-            value={customization.subtitle}
-            onChange={(e) => setCustomization({ subtitle: e.target.value })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">X Axis Title</label>
-          <input
-            type="text"
-            value={customization.xAxisTitle}
-            onChange={(e) => setCustomization({ xAxisTitle: e.target.value })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">Y Axis Title</label>
-          <input
-            type="text"
-            value={customization.yAxisTitle}
-            onChange={(e) => setCustomization({ yAxisTitle: e.target.value })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">Y Axis Prefix</label>
-          <input
-            type="text"
-            value={customization.yAxisPrefix}
-            onChange={(e) => setCustomization({ yAxisPrefix: e.target.value })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">Y Axis Max</label>
-          <input
-            type="number"
-            value={customization.yAxisMax}
-            onChange={(e) => setCustomization({ yAxisMax: Number(e.target.value) || "" })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">Show Grid</label>
-          <input
-            type="checkbox"
-            checked={customization.showGrid}
-            onChange={(e) => setCustomization({ showGrid: e.target.checked })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
-        <div>
-          <label className="block mb-2">X Axis Type</label>
-          <select
-            value={customization.xAxisType}
-            onChange={(e) => setCustomization({ xAxisType: e.target.value as "date" | "category" | "linear" })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl">Customization</h2>
+        <div className="flex gap-4">
+          <div>
+            <label className="mr-2">Chart Type:</label>
+            <select
+              value={chartType}
+              onChange={(e) => setChartType(e.target.value as "line" | "bar")}
+              className="bg-borderBlue text-white px-3 py-2 rounded-md"
+            >
+              <option value="line">Line Chart</option>
+              <option value="bar">Bar Chart</option>
+            </select>
+          </div>
+          <button
+            onClick={handleToggleSet}
+            className="bg-borderBlue hover:bg-blue-600 px-4 py-2 rounded-md"
           >
-            <option value="date">Date</option>
-            <option value="category">Category</option>
-            <option value="linear">Linear</option>
-          </select>
+            {showingFirstSet ? "More Options" : "Basic Options"}
+          </button>
         </div>
-        <div>
-          <label className="block mb-2">Source</label>
-          <input
-            type="text"
-            value={customization.source}
-            onChange={(e) => setCustomization({ source: e.target.value })}
-            className="bg-borderBlue text-white w-full p-2 rounded-md"
-          />
-        </div>
+      </div>
+
+      <div className="grid gap-4 grid-cols-4">
+        {/* Toggle between two sets of options */}
+        {showingFirstSet ? (
+          <>
+            <div>
+              <label className="block mb-2">Title</label>
+              <input
+                type="text"
+                value={customization.title}
+                onChange={(e) => setCustomization({ title: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Subtitle</label>
+              <input
+                type="text"
+                value={customization.subtitle}
+                onChange={(e) => setCustomization({ subtitle: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">X Axis Title</label>
+              <input
+                type="text"
+                value={customization.xAxisTitle}
+                onChange={(e) => setCustomization({ xAxisTitle: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Y Axis Title</label>
+              <input
+                type="text"
+                value={customization.yAxisTitle}
+                onChange={(e) => setCustomization({ yAxisTitle: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <label className="block mb-2">Filled</label>
+              <select
+                value={customization.fill ? "filled" : "not filled"}
+                onChange={(e) =>
+                  setCustomization({ fill: e.target.value === "filled" })
+                }
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              >
+                <option value="filled">Filled</option>
+                <option value="not filled">Not Filled</option>
+              </select>
+            </div>
+            <div>
+              <label className="block mb-2">Stacked</label>
+              <select
+                value={customization.stacked ? "stacked" : "not stacked"}
+                onChange={(e) =>
+                  setCustomization({ stacked: e.target.value === "stacked" })
+                }
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              >
+                <option value="stacked">Stacked</option>
+                <option value="not stacked">Not Stacked</option>
+              </select>
+            </div>
+            <div>
+              <label className="block mb-2">Y Axis Prefix</label>
+              <input
+                type="text"
+                value={customization.yAxisPrefix}
+                onChange={(e) => setCustomization({ yAxisPrefix: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Y Axis Max</label>
+              <input
+                type="number"
+                value={customization.yAxisMax}
+                onChange={(e) =>
+                  setCustomization({ yAxisMax: Number(e.target.value) || "" })
+                }
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+          </>
+        )}
       </div>
     </footer>
   );

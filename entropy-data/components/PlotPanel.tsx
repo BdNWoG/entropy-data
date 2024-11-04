@@ -14,6 +14,9 @@ interface Customization {
   showGrid: boolean;
   xAxisType: "date" | "category" | "linear";
   source: string;
+  fill: boolean;           // New property to determine if line chart is filled
+  stacked: boolean;        // New property to determine if charts are stacked
+  chartType: "line" | "bar"; // New property to choose chart type
 }
 
 interface PlotPanelProps {
@@ -29,13 +32,14 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization }) => {
       const traces: Data[] = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
         x: timestamp,
         y: value,
-        type: "scatter",
-        mode: "lines",
+        type: customization.chartType === "line" ? "scatter" : "bar",
+        mode: customization.chartType === "line" ? "lines" : undefined,
         name: label,
-        fill: "tonexty",
-        stackgroup: "one",
-        line: { width: 3, color: getColor(index) },
-        fillcolor: getFillColor(index),
+        fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
+        stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
+        marker: { color: getColor(index) }, // Apply colors for bars
+        line: customization.chartType === "line" ? { width: 3, color: getColor(index) } : undefined,
+        fillcolor: customization.chartType === "line" && customization.fill ? getFillColor(index) : undefined,
       }));
 
       const layout: Partial<Layout> = {
@@ -118,6 +122,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization }) => {
             borderpad: 4,
           },
         ],
+        barmode: customization.stacked && customization.chartType === "bar" ? "stack" : undefined,
       };
 
       Plotly.react(plotRef.current, traces, layout);

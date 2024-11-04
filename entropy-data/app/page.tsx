@@ -5,26 +5,31 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";
 import PlotPanel from "../components/PlotPanel";
-import { PlotData } from "../components/types";
+import { PlotData, Customization } from "../components/types"; // Import Customization type
 
 export default function Home() {
   const [plotData, setPlotData] = useState<PlotData | null>(null);
 
   // Define customization state with default values and correct types
-  const [customization, setCustomization] = useState({
+  const [customization, setCustomization] = useState<Customization>({
     title: "Total $ Value in Canonical Bridges",
     subtitle: "Other includes Mantle, Linea, and Starknet",
     xAxisTitle: "Date",
     yAxisTitle: "Value",
     yAxisPrefix: "$",
-    yAxisMax: "" as number | "", // yAxisMax is number or empty string
+    yAxisMax: "", // yAxisMax can be a number or an empty string
     showGrid: true,
-    xAxisType: "date" as "date" | "category" | "linear", // xAxisType with specific union type
+    xAxisType: "date", // Default xAxisType is date
     source: "Source: DeFi Llama",
+
+    // New properties for chart customization
+    fill: true, // Default to filled for line charts
+    stacked: true, // Default to stacked
+    chartType: "line", // Default to line chart
   });
 
   // Function to update the customization options
-  const updateCustomization = (updates: Partial<typeof customization>) => {
+  const updateCustomization = (updates: Partial<Customization>) => {
     setCustomization((prev) => ({ ...prev, ...updates }));
   };
 

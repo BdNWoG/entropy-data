@@ -15,5 +15,10 @@ export interface Customization {
     showGrid: boolean;
     xAxisType: "date" | "category" | "linear"; // xAxisType has specific allowed values
     source: string;
+  
+    // New properties for chart customization
+    fill: boolean;          // Determines if area under the line is filled
+    stacked: boolean;       // Determines if the chart should be stacked
+    chartType: "line" | "bar"; // Allows selection between line and bar chart
   }
   
