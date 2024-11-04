@@ -4,11 +4,24 @@ import { useEffect, useRef } from "react";
 import Plotly, { Layout, Data } from "plotly.js-dist-min";
 import { PlotData } from "./types";
 
-interface PlotPanelProps {
-  plotData: PlotData | null;
+interface Customization {
+  title: string;
+  subtitle: string;
+  xAxisTitle: string;
+  yAxisTitle: string;
+  yAxisPrefix: string;
+  yAxisMax: number | "";
+  showGrid: boolean;
+  xAxisType: "date" | "category" | "linear";
+  source: string;
 }
 
-const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
+interface PlotPanelProps {
+  plotData: PlotData | null;
+  customization: Customization;
+}
+
+const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization }) => {
   const plotRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -27,7 +40,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
 
       const layout: Partial<Layout> = {
         title: {
-          text: "<b>Total $ Value in Canonical Bridges</b><br><sup><span style='color:#9ecff2'>Other includes Mantle, Linea, and Starknet</span></sup>",
+          text: `<b>${customization.title}</b><br><sup><span style='color:#9ecff2'>${customization.subtitle}</span></sup>`,
           font: { family: "sans-serif", size: 30, color: "white" },
           xanchor: "center",
           x: 0.5,
@@ -36,19 +49,21 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
         paper_bgcolor: "#030d1c",
         font: { size: 14, color: "white" },
         xaxis: {
-          type: "date",
-          tickformat: "%b %Y",
+          title: customization.xAxisTitle,
+          type: customization.xAxisType,
+          tickformat: customization.xAxisType === "date" ? "%b %Y" : undefined,
           tickfont: { size: 14, color: "white" },
           showline: true,
           linewidth: 2,
           linecolor: "#D1D5DB",
           showspikes: false,
-          showgrid: false,
-          rangeslider: { visible: true },
+          showgrid: customization.showGrid,
+          rangeslider: { visible: customization.xAxisType === "date" },
         },
         yaxis: {
-          tickprefix: "$",
-          showgrid: true,
+          title: customization.yAxisTitle,
+          tickprefix: customization.yAxisPrefix,
+          showgrid: customization.showGrid,
           gridcolor: "rgba(173, 176, 181, 0.6)",
           griddash: "dash",
           tickfont: { size: 14, color: "white" },
@@ -59,7 +74,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
           zerolinewidth: 2,
           zerolinecolor: "white",
           rangemode: "tozero",
-          autorange: true,
+          autorange: customization.yAxisMax === "" ? true : false,
+          range: customization.yAxisMax !== "" ? [0, customization.yAxisMax] : undefined,
         },
         legend: {
           orientation: "h",
@@ -87,7 +103,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
         ],
         annotations: [
           {
-            text: `Source: DeFi Llama <br>Date: ${new Date().toLocaleDateString()}`,
+            text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
             font: { size: 8, color: "white" },
             showarrow: false,
             xref: "paper",
@@ -110,16 +126,15 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData }) => {
       Plotly.purge(plotRef.current);
       plotRef.current.innerHTML = "";
     }
-  }, [plotData]);
+  }, [plotData, customization]);
 
   return (
     <div className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border">
       {plotData ? (
-        // Conditionally render the chart container only when plotData exists
         <div
           ref={plotRef}
           style={{ width: "100%", height: "100%" }}
-          key={plotData ? "plot-container" : "empty-container"} // Force DOM reset with unique key
+          key={plotData ? "plot-container" : "empty-container"}
         />
       ) : (
         <div className="flex items-center justify-center h-full text-white">
