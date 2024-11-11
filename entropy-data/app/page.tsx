@@ -19,6 +19,7 @@ export default function Home() {
     xAxisTitle: "Date",
     yAxisTitle: "Value",
     yAxisPrefix: "$",
+    yAxisSuffix: "",
     yAxisMax: "",
     showGrid: true,
     xAxisType: "date",
@@ -35,7 +36,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-dark flex flex-col">
       {/* Pass plotRef to Header for copy and save functionality */}
-      <Header plotRef={plotRef} />
+      <Header plotRef={plotRef} source={customization.source} />
       <div className="flex-grow flex">
         {/* Pass plotData, customization, and plotRef to PlotPanel */}
         <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />

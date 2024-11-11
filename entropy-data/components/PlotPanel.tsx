@@ -36,48 +36,18 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
 
   useEffect(() => {
     if (plotData && internalPlotRef.current) {
-      let traces: Data[] = [];
-
-      if (customization.chartType === "bar-line") {
-        // All data except the last series as bars on left y-axis
-        const categories = Object.keys(plotData);
-        categories.slice(0, -1).forEach((label, index) => {
-          traces.push({
-            x: plotData[label].timestamp,
-            y: plotData[label].value,
-            type: "bar",
-            name: label,
-            marker: { color: getColor(index) },
-            yaxis: "y1", // Left y-axis
-          });
-        });
-
-        // Last series as line on right y-axis
-        const lastLabel = categories[categories.length - 1];
-        traces.push({
-          x: plotData[lastLabel].timestamp,
-          y: plotData[lastLabel].value,
-          type: "scatter",
-          mode: "lines+markers",
-          name: lastLabel,
-          line: { color: getColor(categories.length - 1), width: 3 },
-          yaxis: "y2", // Right y-axis
-        });
-      } else {
-        // Existing logic for line, bar, or 100% chart
-        traces = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
-          x: timestamp,
-          y: value,
-          type: customization.chartType === "line" ? "scatter" : "bar",
-          mode: customization.chartType === "line" ? "lines" : undefined,
-          name: label,
-          fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
-          stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
-          marker: { color: getColor(index) },
-          line: customization.chartType === "line" ? { width: 3, color: getColor(index) } : undefined,
-          fillcolor: customization.chartType === "line" && customization.fill ? getFillColor(index) : undefined,
-        }));
-      }
+      const traces: Data[] = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
+        x: timestamp,
+        y: value,
+        type: customization.chartType === "line" ? "scatter" : "bar",
+        mode: customization.chartType === "line" ? "lines" : undefined,
+        name: label,
+        fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
+        stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
+        marker: { color: getColor(index) },
+        line: customization.chartType === "line" ? { width: 3, color: getColor(index) } : undefined,
+        fillcolor: customization.chartType === "line" && customization.fill ? getFillColor(index) : undefined,
+      }));
 
       const layout: Partial<Layout> = {
         title: {
@@ -99,7 +69,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           linecolor: "#D1D5DB",
           showspikes: false,
           showgrid: customization.showGrid,
-          rangeslider: { visible: customization.xAxisType === "date" },
+          rangeslider: { visible: customization.chartType !== "bar-line" }, // Hide range slider in bar-line mode
         },
         yaxis: {
           title: customization.yAxisTitle,
@@ -135,12 +105,29 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
         legend: {
           orientation: "h",
           yanchor: "bottom",
-          y: -0.15,
-          xanchor: "left",
-          x: 0,
+          y: -0.25,
+          xanchor: "center",
+          x: 0.5,
           font: { size: 16, color: "white" },
         },
-        margin: { l: 100, r: 100, t: 100, b: 80 },
+        margin: { l: 100, r: 100, t: 100, b: 100 },
+        annotations: [
+          {
+            text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
+            font: { size: 8, color: "white" },
+            showarrow: false,
+            xref: "paper",
+            yref: "paper",
+            x: 0.99,
+            y: -0.15,
+            xanchor: "right",
+            yanchor: "bottom",
+            bgcolor: "#1f2c56",
+            bordercolor: "white",
+            borderwidth: 1,
+            borderpad: 4,
+          },
+        ],
         barmode: customization.stacked && customization.chartType === "bar" ? "stack" : undefined,
       };
 
