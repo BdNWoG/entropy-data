@@ -17,7 +17,7 @@ interface Customization {
   source: string;
   fill: boolean;
   stacked: boolean;
-  chartType: "line" | "bar";
+  chartType: "line" | "bar" | "100%";
 }
 
 interface PlotPanelProps {
@@ -33,18 +33,41 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
 
   useEffect(() => {
     if (plotData && internalPlotRef.current) {
-      const traces: Data[] = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
-        x: timestamp,
-        y: value,
-        type: customization.chartType === "line" ? "scatter" : "bar",
-        mode: customization.chartType === "line" ? "lines" : undefined,
-        name: label,
-        fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
-        stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
-        marker: { color: getColor(index) },
-        line: customization.chartType === "line" ? { width: 3, color: getColor(index) } : undefined,
-        fillcolor: customization.chartType === "line" && customization.fill ? getFillColor(index) : undefined,
-      }));
+      let traces: Data[] = [];
+
+      if (customization.chartType === "100%") {
+        // Normalize each entry to sum to 100% for 100% stacked bar chart
+        const categories = Object.keys(plotData);
+        const timestamps = plotData[categories[0]].timestamp; // Assume all categories have the same timestamps
+
+        // Calculate total for each timestamp
+        const totals = timestamps.map((_, i) =>
+          categories.reduce((sum, category) => sum + plotData[category].value[i], 0)
+        );
+
+        // Create traces with normalized values (percentages)
+        traces = categories.map((label, index) => ({
+          x: timestamps,
+          y: plotData[label].value.map((value, i) => (value / totals[i]) * 100),
+          type: "bar",
+          name: label,
+          marker: { color: getColor(index) },
+        }));
+      } else {
+        // Regular bar or line chart traces
+        traces = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
+          x: timestamp,
+          y: value,
+          type: customization.chartType === "line" ? "scatter" : "bar",
+          mode: customization.chartType === "line" ? "lines" : undefined,
+          name: label,
+          fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
+          stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
+          marker: { color: getColor(index) },
+          line: customization.chartType === "line" ? { width: 3, color: getColor(index) } : undefined,
+          fillcolor: customization.chartType === "line" && customization.fill ? getFillColor(index) : undefined,
+        }));
+      }
 
       const layout: Partial<Layout> = {
         title: {
@@ -69,9 +92,9 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           rangeslider: { visible: customization.xAxisType === "date" },
         },
         yaxis: {
-          title: customization.yAxisTitle,
-          tickprefix: customization.yAxisPrefix,
-          ticksuffix: customization.yAxisSuffix,
+          title: customization.chartType === "100%" ? "Percentage" : customization.yAxisTitle,
+          tickprefix: customization.chartType === "100%" ? "" : customization.yAxisPrefix,
+          ticksuffix: customization.chartType === "100%" ? "%" : customization.yAxisSuffix,
           showgrid: customization.showGrid,
           gridcolor: "rgba(173, 176, 181, 0.6)",
           griddash: "dash",
@@ -83,8 +106,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           zerolinewidth: 2,
           zerolinecolor: "white",
           rangemode: "tozero",
-          autorange: customization.yAxisMax === "" ? true : false,
-          range: customization.yAxisMax !== "" ? [0, customization.yAxisMax] : undefined,
+          autorange: customization.chartType === "100%" || customization.yAxisMax === "" ? true : false,
+          range: customization.chartType === "100%" ? [0, 100] : customization.yAxisMax !== "" ? [0, customization.yAxisMax] : undefined,
         },
         legend: {
           orientation: "h",
@@ -95,39 +118,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           font: { size: 16, color: "white" },
         },
         margin: { l: 100, r: 100, t: 100, b: 80 },
-        images: [
-          {
-            source: "https://i.imgur.com/1u4DIOJ.png",
-            xref: "paper",
-            yref: "paper",
-            x: 0.5,
-            y: 0.5,
-            sizex: 0.3,
-            sizey: 0.3,
-            xanchor: "center",
-            yanchor: "middle",
-            opacity: 0.4,
-            layer: "above",
-          },
-        ],
-        annotations: [
-          {
-            text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
-            font: { size: 8, color: "white" },
-            showarrow: false,
-            xref: "paper",
-            yref: "paper",
-            x: 0.99,
-            y: -0.14,
-            xanchor: "right",
-            yanchor: "bottom",
-            bgcolor: "#1f2c56",
-            bordercolor: "white",
-            borderwidth: 1,
-            borderpad: 4,
-          },
-        ],
-        barmode: customization.stacked && customization.chartType === "bar" ? "stack" : undefined,
+        barmode: customization.chartType === "100%" || (customization.stacked && customization.chartType === "bar") ? "stack" : undefined,
       };
 
       Plotly.react(internalPlotRef.current, traces, layout);
@@ -154,20 +145,30 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
   );
 };
 
-const getColor = (index: number) => {
-  const colors = ["#12AAFF", "#f50557", "#2ca02c", "#f57c00", "#ccccff"];
-  return colors[index % colors.length];
+// Define the color palette
+const colors = [
+  "#213147", "#4a4a4a", "#0557f5", "#ff677d", "#9ecff2", "#ffcdb2", 
+  "#ffd1dc", "#e0e3d1", "#16553b", "#959595", "#9ab4e6", "#ffa060", 
+  "#a172c3", "#4a6db1", "#041d7e", "#04e3c9"
+];
+
+// Get color based on index
+const getColor = (index: number) => colors[index % colors.length];
+
+// Get fill color with 0.5 opacity
+const getFillColor = (index: number) => {
+  const color = colors[index % colors.length];
+  const [r, g, b] = hexToRgb(color);
+  return `rgba(${r}, ${g}, ${b}, 0.5)`;
 };
 
-const getFillColor = (index: number) => {
-  const fillColors = [
-    "rgba(18, 170, 255, 0.5)",
-    "rgba(245, 5, 87, 0.5)",
-    "rgba(44, 160, 44, 0.5)",
-    "rgba(245, 124, 0, 0.5)",
-    "rgba(204, 204, 255, 0.5)",
-  ];
-  return fillColors[index % fillColors.length];
+// Convert hex color to RGB
+const hexToRgb = (hex: string) => {
+  const bigint = parseInt(hex.slice(1), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return [r, g, b];
 };
 
 export default PlotPanel;

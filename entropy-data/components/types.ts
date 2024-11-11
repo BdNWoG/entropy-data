@@ -20,6 +20,6 @@ export interface Customization {
     // New properties for chart customization
     fill: boolean;          // Determines if area under the line is filled
     stacked: boolean;       // Determines if the chart should be stacked
-    chartType: "line" | "bar"; // Allows selection between line and bar chart
+    chartType: "line" | "bar" | "100%"; // Allows selection between line and bar chart
   }
   

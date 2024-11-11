@@ -16,17 +16,18 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl">Customization</h2>
         <div className="flex gap-4">
-          <div>
-            <label className="mr-2">Chart Type:</label>
-            <select
-              value={customization.chartType}
-              onChange={(e) => setCustomization({ chartType: e.target.value as "line" | "bar" })}
-              className="bg-borderBlue text-white px-3 py-2 rounded-md"
-            >
-              <option value="line">Line Chart</option>
-              <option value="bar">Bar Chart</option>
-            </select>
-          </div>
+        <div>
+          <label className="mr-2">Chart Type:</label>
+          <select
+            value={customization.chartType}
+            onChange={(e) => setCustomization({ chartType: e.target.value as "line" | "bar" | "100%" })}
+            className="bg-borderBlue text-white px-3 py-2 rounded-md"
+          >
+            <option value="line">Line Chart</option>
+            <option value="bar">Bar Chart</option>
+            <option value="100%">100% Chart</option>
+          </select>
+        </div>
           <button
             onClick={handleToggleSet}
             className="bg-borderBlue hover:bg-blue-600 px-4 py-2 rounded-md"

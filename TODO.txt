@@ -1,12 +1,6 @@
 TODO:
 
-Bar chart
-When copy or save in the right placements
-Resolution
-
 Legend instead of slider - in the downloaded graph
 
 Dual y axis - bar and line - 3rd chart type
 100% normalization - 4th chart type
-
-enough colors
