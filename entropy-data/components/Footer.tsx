@@ -16,18 +16,21 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl">Customization</h2>
         <div className="flex gap-4">
-        <div>
-          <label className="mr-2">Chart Type:</label>
-          <select
-            value={customization.chartType}
-            onChange={(e) => setCustomization({ chartType: e.target.value as "line" | "bar" | "100%" })}
-            className="bg-borderBlue text-white px-3 py-2 rounded-md"
-          >
-            <option value="line">Line Chart</option>
-            <option value="bar">Bar Chart</option>
-            <option value="100%">100% Chart</option>
-          </select>
-        </div>
+          <div>
+            <label className="mr-2">Chart Type:</label>
+            <select
+              value={customization.chartType}
+              onChange={(e) =>
+                setCustomization({ chartType: e.target.value as "line" | "bar" | "100%" | "bar-line" })
+              }
+              className="bg-borderBlue text-white px-3 py-2 rounded-md"
+            >
+              <option value="line">Line Chart</option>
+              <option value="bar">Bar Chart</option>
+              <option value="100%">100% Chart</option>
+              <option value="bar-line">Bar and Line Chart</option>
+            </select>
+          </div>
           <button
             onClick={handleToggleSet}
             className="bg-borderBlue hover:bg-blue-600 px-4 py-2 rounded-md"
@@ -68,11 +71,29 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               />
             </div>
             <div>
-              <label className="block mb-2">Y Axis Title</label>
+              <label className="block mb-2">Source</label>
+              <input
+                type="text"
+                value={customization.source}
+                onChange={(e) => setCustomization({ source: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Y Axis Title (Left)</label>
               <input
                 type="text"
                 value={customization.yAxisTitle}
                 onChange={(e) => setCustomization({ yAxisTitle: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Y Axis Title (Right)</label>
+              <input
+                type="text"
+                value={customization.yAxisRightTitle || ""}
+                onChange={(e) => setCustomization({ yAxisRightTitle: e.target.value })}
                 className="bg-borderBlue text-white w-full p-2 rounded-md"
               />
             </div>
@@ -106,7 +127,7 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               </select>
             </div>
             <div>
-              <label className="block mb-2">Y Axis Prefix</label>
+              <label className="block mb-2">Y Axis Prefix (Left)</label>
               <input
                 type="text"
                 value={customization.yAxisPrefix}
@@ -115,7 +136,7 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               />
             </div>
             <div>
-              <label className="block mb-2">Y Axis Suffix</label>
+              <label className="block mb-2">Y Axis Suffix (Left)</label>
               <input
                 type="text"
                 value={customization.yAxisSuffix || ""}
@@ -124,7 +145,7 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               />
             </div>
             <div>
-              <label className="block mb-2">Y Axis Max</label>
+              <label className="block mb-2">Y Axis Max (Left)</label>
               <input
                 type="number"
                 value={customization.yAxisMax}
@@ -135,11 +156,20 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               />
             </div>
             <div>
-              <label className="block mb-2">Source</label>
+              <label className="block mb-2">Y Axis Prefix (Right)</label>
               <input
                 type="text"
-                value={customization.source}
-                onChange={(e) => setCustomization({ source: e.target.value })}
+                value={customization.yAxisRightPrefix || ""}
+                onChange={(e) => setCustomization({ yAxisRightPrefix: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Y Axis Suffix (Right)</label>
+              <input
+                type="text"
+                value={customization.yAxisRightSuffix || ""}
+                onChange={(e) => setCustomization({ yAxisRightSuffix: e.target.value })}
                 className="bg-borderBlue text-white w-full p-2 rounded-md"
               />
             </div>

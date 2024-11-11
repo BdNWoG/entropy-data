@@ -12,12 +12,15 @@ interface Customization {
   yAxisPrefix: string;
   yAxisSuffix: string;
   yAxisMax: number | "";
+  yAxisRightTitle?: string;
+  yAxisRightPrefix?: string;
+  yAxisRightSuffix?: string;
   showGrid: boolean;
   xAxisType: "date" | "category" | "linear";
   source: string;
   fill: boolean;
   stacked: boolean;
-  chartType: "line" | "bar" | "100%";
+  chartType: "line" | "bar" | "100%" | "bar-line";
 }
 
 interface PlotPanelProps {
@@ -35,26 +38,33 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
     if (plotData && internalPlotRef.current) {
       let traces: Data[] = [];
 
-      if (customization.chartType === "100%") {
-        // Normalize each entry to sum to 100% for 100% stacked bar chart
+      if (customization.chartType === "bar-line") {
+        // All data except the last series as bars on left y-axis
         const categories = Object.keys(plotData);
-        const timestamps = plotData[categories[0]].timestamp; // Assume all categories have the same timestamps
+        categories.slice(0, -1).forEach((label, index) => {
+          traces.push({
+            x: plotData[label].timestamp,
+            y: plotData[label].value,
+            type: "bar",
+            name: label,
+            marker: { color: getColor(index) },
+            yaxis: "y1", // Left y-axis
+          });
+        });
 
-        // Calculate total for each timestamp
-        const totals = timestamps.map((_, i) =>
-          categories.reduce((sum, category) => sum + plotData[category].value[i], 0)
-        );
-
-        // Create traces with normalized values (percentages)
-        traces = categories.map((label, index) => ({
-          x: timestamps,
-          y: plotData[label].value.map((value, i) => (value / totals[i]) * 100),
-          type: "bar",
-          name: label,
-          marker: { color: getColor(index) },
-        }));
+        // Last series as line on right y-axis
+        const lastLabel = categories[categories.length - 1];
+        traces.push({
+          x: plotData[lastLabel].timestamp,
+          y: plotData[lastLabel].value,
+          type: "scatter",
+          mode: "lines+markers",
+          name: lastLabel,
+          line: { color: getColor(categories.length - 1), width: 3 },
+          yaxis: "y2", // Right y-axis
+        });
       } else {
-        // Regular bar or line chart traces
+        // Existing logic for line, bar, or 100% chart
         traces = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
           x: timestamp,
           y: value,
@@ -92,9 +102,9 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           rangeslider: { visible: customization.xAxisType === "date" },
         },
         yaxis: {
-          title: customization.chartType === "100%" ? "Percentage" : customization.yAxisTitle,
-          tickprefix: customization.chartType === "100%" ? "" : customization.yAxisPrefix,
-          ticksuffix: customization.chartType === "100%" ? "%" : customization.yAxisSuffix,
+          title: customization.yAxisTitle,
+          tickprefix: customization.yAxisPrefix,
+          ticksuffix: customization.yAxisSuffix,
           showgrid: customization.showGrid,
           gridcolor: "rgba(173, 176, 181, 0.6)",
           griddash: "dash",
@@ -106,8 +116,21 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           zerolinewidth: 2,
           zerolinecolor: "white",
           rangemode: "tozero",
-          autorange: customization.chartType === "100%" || customization.yAxisMax === "" ? true : false,
-          range: customization.chartType === "100%" ? [0, 100] : customization.yAxisMax !== "" ? [0, customization.yAxisMax] : undefined,
+          autorange: customization.yAxisMax === "" ? true : false,
+          range: customization.yAxisMax !== "" ? [0, customization.yAxisMax] : undefined,
+        },
+        yaxis2: {
+          title: customization.yAxisRightTitle || "",
+          tickprefix: customization.yAxisRightPrefix || "",
+          ticksuffix: customization.yAxisRightSuffix || "",
+          overlaying: "y",
+          side: "right",
+          showline: true,
+          linewidth: 2,
+          linecolor: "white",
+          zeroline: true,
+          zerolinewidth: 2,
+          zerolinecolor: "white",
         },
         legend: {
           orientation: "h",
@@ -118,7 +141,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           font: { size: 16, color: "white" },
         },
         margin: { l: 100, r: 100, t: 100, b: 80 },
-        barmode: customization.chartType === "100%" || (customization.stacked && customization.chartType === "bar") ? "stack" : undefined,
+        barmode: customization.stacked && customization.chartType === "bar" ? "stack" : undefined,
       };
 
       Plotly.react(internalPlotRef.current, traces, layout);

@@ -12,14 +12,14 @@ export interface Customization {
     yAxisTitle: string;
     yAxisPrefix: string;
     yAxisSuffix: string;
-    yAxisMax: number | ""; // yAxisMax can be a number or an empty string
+    yAxisMax: number | "";
+    yAxisRightTitle?: string;
+    yAxisRightPrefix?: string;
+    yAxisRightSuffix?: string;
     showGrid: boolean;
-    xAxisType: "date" | "category" | "linear"; // xAxisType has specific allowed values
+    xAxisType: "date" | "category" | "linear";
     source: string;
-  
-    // New properties for chart customization
-    fill: boolean;          // Determines if area under the line is filled
-    stacked: boolean;       // Determines if the chart should be stacked
-    chartType: "line" | "bar" | "100%"; // Allows selection between line and bar chart
+    fill: boolean;
+    stacked: boolean;
+    chartType: "line" | "bar" | "100%" | "bar-line";
   }
-  

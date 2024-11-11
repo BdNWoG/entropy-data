@@ -1,6 +1,3 @@
 TODO:
 
 Legend instead of slider - in the downloaded graph
-
-Dual y axis - bar and line - 3rd chart type
-100% normalization - 4th chart type
