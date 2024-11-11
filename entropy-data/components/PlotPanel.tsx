@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useImperativeHandle } from "react";
-import { Layout, Data } from "plotly.js-dist-min"; // Keep Layout and Data types for typing purposes
+import { Layout, Data } from "plotly.js-dist-min"; // Import types only for use in typing
 import { PlotData } from "./types";
 
 interface Customization {
@@ -35,7 +35,6 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
   useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement);
 
   useEffect(() => {
-    // Dynamically import Plotly only in the client-side environment
     const loadPlotlyAndRender = async () => {
       const Plotly = await import("plotly.js-dist-min");
 
@@ -148,11 +147,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
   return (
     <div className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border">
       {plotData != null ? (
-        <div
-          ref={internalPlotRef}
-          key={plotData ? "plot-present" : "plot-null"}
-          style={{ width: "100%", height: "100%" }}
-        />
+        <div ref={internalPlotRef} style={{ width: "100%", height: "100%" }} />
       ) : (
         <div className="flex items-center justify-center h-full text-white">
           <p>No data to display. Please import or create CSV data.</p>
