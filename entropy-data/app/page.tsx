@@ -1,11 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";
-import PlotPanel from "../components/PlotPanel";
 import { PlotData, Customization } from "../components/types";
+
+// Dynamically import PlotPanel with server-side rendering disabled
+const PlotPanel = dynamic(() => import("../components/PlotPanel"), { ssr: false });
 
 export default function Home() {
   const [plotData, setPlotData] = useState<PlotData | null>(null);
