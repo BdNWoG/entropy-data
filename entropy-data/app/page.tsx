@@ -42,7 +42,9 @@ export default function Home() {
       <Header plotRef={plotRef} source={customization.source} />
       <div className="flex-grow flex">
         {/* Pass plotData, customization, and plotRef to PlotPanel */}
-        <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
+        {typeof window !== "undefined" && (
+          <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
+        )}
         <CSVPanel setPlotData={setPlotData} />
       </div>
       <Footer customization={customization} setCustomization={updateCustomization} />
