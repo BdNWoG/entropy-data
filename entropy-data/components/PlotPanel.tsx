@@ -10,6 +10,7 @@ interface Customization {
   xAxisTitle: string;
   yAxisTitle: string;
   yAxisPrefix: string;
+  yAxisSuffix: string;
   yAxisMax: number | "";
   showGrid: boolean;
   xAxisType: "date" | "category" | "linear";
@@ -28,17 +29,15 @@ interface PlotPanelProps {
 const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef }) => {
   const internalPlotRef = useRef<HTMLDivElement | null>(null);
 
-  // Expose internalPlotRef to plotRef passed from Home component
   useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement);
 
   useEffect(() => {
     if (plotData && internalPlotRef.current) {
-      // Render the plot if plotData is present
       const traces: Data[] = Object.entries(plotData).map(([label, { timestamp, value }], index) => ({
         x: timestamp,
         y: value,
-        type: customization.chartType === "line" ? "scatter" : "bar", // Determine type based on chartType
-        mode: customization.chartType === "line" ? "lines" : undefined, // Only set mode for line charts
+        type: customization.chartType === "line" ? "scatter" : "bar",
+        mode: customization.chartType === "line" ? "lines" : undefined,
         name: label,
         fill: customization.chartType === "line" && customization.fill ? "tonexty" : undefined,
         stackgroup: customization.stacked && customization.chartType === "line" ? "one" : undefined,
@@ -72,6 +71,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
         yaxis: {
           title: customization.yAxisTitle,
           tickprefix: customization.yAxisPrefix,
+          ticksuffix: customization.yAxisSuffix,
           showgrid: customization.showGrid,
           gridcolor: "rgba(173, 176, 181, 0.6)",
           griddash: "dash",
@@ -106,7 +106,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             sizey: 0.3,
             xanchor: "center",
             yanchor: "middle",
-            opacity: 0.15,
+            opacity: 0.4,
             layer: "above",
           },
         ],

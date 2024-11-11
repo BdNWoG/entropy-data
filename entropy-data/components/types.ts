@@ -11,6 +11,7 @@ export interface Customization {
     xAxisTitle: string;
     yAxisTitle: string;
     yAxisPrefix: string;
+    yAxisSuffix: string;
     yAxisMax: number | ""; // yAxisMax can be a number or an empty string
     showGrid: boolean;
     xAxisType: "date" | "category" | "linear"; // xAxisType has specific allowed values

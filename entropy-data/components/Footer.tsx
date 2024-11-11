@@ -114,6 +114,15 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               />
             </div>
             <div>
+              <label className="block mb-2">Y Axis Suffix</label>
+              <input
+                type="text"
+                value={customization.yAxisSuffix || ""}
+                onChange={(e) => setCustomization({ yAxisSuffix: e.target.value })}
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
               <label className="block mb-2">Y Axis Max</label>
               <input
                 type="number"
@@ -121,6 +130,15 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
                 onChange={(e) =>
                   setCustomization({ yAxisMax: Number(e.target.value) || "" })
                 }
+                className="bg-borderBlue text-white w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">Source</label>
+              <input
+                type="text"
+                value={customization.source}
+                onChange={(e) => setCustomization({ source: e.target.value })}
                 className="bg-borderBlue text-white w-full p-2 rounded-md"
               />
             </div>
