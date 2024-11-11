@@ -7,10 +7,8 @@ import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";
 import { PlotData, Customization } from "../components/types";
 
-// Dynamically import PlotPanel with SSR disabled
-const PlotPanel = dynamic(() => import("../components/PlotPanel"), { 
-  ssr: false, 
-  loading: () => <div>Loading Plot...</div> // Fallback while Plotly loads on the client side
+const PlotPanel = dynamic(() => import('../components/PlotPanel'), { 
+  ssr: false 
 });
 
 export default function Home() {

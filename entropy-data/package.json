@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/next": "^9.0.0",
     "@types/plotly.js": "^2.33.5",
     "@types/plotly.js-dist-min": "^2.3.4",
     "next": "15.0.0",
