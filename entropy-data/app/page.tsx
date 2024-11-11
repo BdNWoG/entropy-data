@@ -1,8 +1,7 @@
-// app/page.tsx or pages/index.tsx
 "use client";
 
 import { useRef, useState } from "react";
-import dynamic from "next/dynamic"; // Import dynamic from Next.js
+import dynamic from "next/dynamic";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";

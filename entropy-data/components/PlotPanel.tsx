@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useImperativeHandle } from "react";
-import { Layout, Data } from "plotly.js-dist-min"; // Import types only for use in typing
+import { Layout, Data } from "plotly.js-dist-min"; // Import only types for typing
 import { PlotData } from "./types";
 
 interface Customization {
