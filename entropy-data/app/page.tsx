@@ -7,9 +7,7 @@ import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";
 import { PlotData, Customization } from "../components/types";
 
-const PlotPanel = dynamic(() => import('../components/PlotPanel'), { 
-  ssr: false 
-});
+const PlotPanel = dynamic(() => import("../components/PlotPanel"), { ssr: false });
 
 export default function Home() {
   const [plotData, setPlotData] = useState<PlotData | null>(null);
@@ -31,7 +29,6 @@ export default function Home() {
     chartType: "line",
   });
 
-  // Function to update customization state
   const updateCustomization = (updates: Partial<Customization>) => {
     setCustomization((prev) => ({ ...prev, ...updates }));
   };
@@ -40,14 +37,7 @@ export default function Home() {
     <div className="min-h-screen bg-dark flex flex-col">
       <Header plotRef={plotRef} source={customization.source} />
       <div className="flex-grow flex">
-        {/* Render PlotPanel only if plotData is available */}
-        {plotData ? (
-          <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            No data loaded. Please upload a CSV file.
-          </div>
-        )}
+        <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
         <CSVPanel setPlotData={setPlotData} />
       </div>
       <Footer customization={customization} setCustomization={updateCustomization} />
