@@ -70,14 +70,16 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
       alert("Plotly or plot reference not available.");
       return;
     }
-
+  
     // Safely cast the element to ExtendedPlotlyHTMLElement
     const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
     const originalLayout = plotElement.layout || {};
-
+  
     try {
       const downloadLayout: Partial<Layout> = {
         ...originalLayout,
+        sliders: [], // Ensure sliders are removed
+        updatemenus: [], // Remove any interactive menus (e.g., animation controls)
         showlegend: true,
         legend: {
           orientation: "h",
@@ -88,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
           font: { size: 18 },
         },
         annotations: [
-          ...(originalLayout.annotations || []),
+          // Add updated source annotation
           {
             text: `${source} <br>Date: ${new Date().toLocaleDateString()}`,
             font: { size: 18, color: "white" },
@@ -106,8 +108,10 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
           },
         ],
       };
-
+  
+      // Apply the new layout for download
       await Plotly.update(plotRef.current, {}, downloadLayout);
+      // Download the image
       await Plotly.downloadImage(plotRef.current, {
         format: "png",
         width: 1600,
@@ -118,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
       console.error("Failed to save plot:", error);
       alert("Failed to save plot. Please try again.");
     } finally {
-      // Restore original layout
+      // Restore the original layout
       await Plotly.relayout(plotRef.current, originalLayout);
     }
   };
