@@ -78,39 +78,47 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
     try {
       const downloadLayout: Partial<Layout> = {
         ...originalLayout,
-        sliders: [], // Ensure sliders are removed
-        updatemenus: [], // Remove any interactive menus (e.g., animation controls)
+        // Remove the range slider
+        xaxis: {
+          ...originalLayout.xaxis,
+          rangeslider: {
+            visible: false, // Disable the range slider
+          },
+        },
+        sliders: [], // Ensure any other sliders are removed
+        updatemenus: [], // Remove any interactive menus
         showlegend: true,
         legend: {
           orientation: "h",
           yanchor: "bottom",
-          y: -0.3,
+          y: -0.15, // Move the legend up slightly
           xanchor: "center",
           x: 0.5,
-          font: { size: 18 },
+          font: { size: 20, color: "white" }, // Increased legend font size
         },
         annotations: [
           // Add updated source annotation
           {
-            text: `${source} <br>Date: ${new Date().toLocaleDateString()}`,
-            font: { size: 18, color: "white" },
+            text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
+            font: { size: 18, color: "white" }, // Increased source font size
             showarrow: false,
             xref: "paper",
             yref: "paper",
             x: 0.99,
-            y: -0.2,
+            y: -0.1,
             xanchor: "right",
             yanchor: "bottom",
             bgcolor: "#1f2c56",
             bordercolor: "white",
             borderwidth: 1,
-            borderpad: 4,
+            borderpad: 6, // Added padding for better aesthetics
           },
         ],
       };
   
       // Apply the new layout for download
       await Plotly.update(plotRef.current, {}, downloadLayout);
+  
       // Download the image
       await Plotly.downloadImage(plotRef.current, {
         format: "png",
@@ -125,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
       // Restore the original layout
       await Plotly.relayout(plotRef.current, originalLayout);
     }
-  };
+  };  
 
   return (
     <header className="bg-panel text-white h-32 flex items-center p-6 shadow-lg relative">
