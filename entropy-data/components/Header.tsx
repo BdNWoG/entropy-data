@@ -1,67 +1,83 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AiOutlineCopy, AiOutlineSave, AiOutlinePicture } from "react-icons/ai";
 import { FiSettings, FiLogIn, FiStar } from "react-icons/fi";
 import { MdColorLens } from "react-icons/md";
-import Image from 'next/image';
-import { Layout } from 'plotly.js';
+import Image from "next/image";
+import { Layout, PlotlyHTMLElement } from "plotly.js";
 
 interface HeaderProps {
   plotRef: React.RefObject<HTMLDivElement>;
-  source: string; // Add source as a prop
+  source: string;
 }
 
+// Custom type for Extended Plotly HTMLElement
+type ExtendedPlotlyHTMLElement = PlotlyHTMLElement & {
+  layout: Partial<Layout> & { annotations?: Array<Partial<Plotly.Annotations>> };
+};
+
 const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
+  const [Plotly, setPlotly] = useState<typeof import("plotly.js-dist-min") | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Load Plotly dynamically once
+  useEffect(() => {
+    const loadPlotly = async () => {
+      try {
+        const plotlyModule = await import("plotly.js-dist-min");
+        setPlotly(plotlyModule);
+      } catch (error) {
+        console.error("Failed to load Plotly:", error);
+      }
+    };
+
+    loadPlotly();
+  }, []);
 
   const toggleProfilePopup = () => {
     setIsProfileOpen(!isProfileOpen);
   };
 
-  // Function to copy plot to clipboard with fallback
   const copyPlot = async () => {
-    if (plotRef.current) {
-      try {
-        const Plotly = await import("plotly.js-dist-min"); // Dynamic import
-        const imageDataUrl = await Plotly.toImage(plotRef.current, {
-          format: "png",
-          width: 800,
-          height: 600,
-        });
+    if (!Plotly || !plotRef.current) {
+      alert("Plotly or plot reference not available.");
+      return;
+    }
 
-        if (typeof ClipboardItem !== "undefined") {
-          const blob = await (await fetch(imageDataUrl)).blob();
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              "image/png": blob,
-            }),
-          ]);
-          alert("Plot copied to clipboard as an image!");
-        } else {
-          alert(
-            "Your browser does not support copying images directly to the clipboard. Please update your browser or try a different one."
-          );
-        }
-      } catch (error) {
-        console.error("Failed to copy plot as image:", error);
-        alert("Failed to copy plot as an image. Please try again.");
+    try {
+      const imageDataUrl = await Plotly.toImage(plotRef.current, {
+        format: "png",
+        width: 800,
+        height: 600,
+      });
+
+      if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
+        const blob = await (await fetch(imageDataUrl)).blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        alert("Plot copied to clipboard!");
+      } else {
+        alert("Your browser does not support Clipboard API for images.");
       }
+    } catch (error) {
+      console.error("Failed to copy plot:", error);
+      alert("Failed to copy plot. Please try again.");
     }
   };
 
-  // Function to save the plot as an image
   const savePlot = async () => {
-  if (plotRef.current) {
+    if (!Plotly || !plotRef.current) {
+      alert("Plotly or plot reference not available.");
+      return;
+    }
+
+    // Safely cast the element to ExtendedPlotlyHTMLElement
+    const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
+    const originalLayout = plotElement.layout || {};
+
     try {
-      const Plotly = await import("plotly.js-dist-min"); // Dynamic import
-
-      // Retrieve the current layout using Plotly's relayout function
-      const currentLayout = await Plotly.relayout(plotRef.current, {}) as Partial<Layout>;
-
-      // Temporarily adjust layout for download with larger legend and source annotation
       const downloadLayout: Partial<Layout> = {
-        ...currentLayout,
+        ...originalLayout,
         showlegend: true,
         legend: {
           orientation: "h",
@@ -69,12 +85,10 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
           y: -0.3,
           xanchor: "center",
           x: 0.5,
-          font: {
-            size: 18, // Scale up legend font for download
-          },
+          font: { size: 18 },
         },
         annotations: [
-          ...(currentLayout.annotations || []),
+          ...(originalLayout.annotations || []),
           {
             text: `${source} <br>Date: ${new Date().toLocaleDateString()}`,
             font: { size: 18, color: "white" },
@@ -93,24 +107,21 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
         ],
       };
 
-      await Plotly.relayout(plotRef.current, downloadLayout);
+      await Plotly.update(plotRef.current, {}, downloadLayout);
       await Plotly.downloadImage(plotRef.current, {
         format: "png",
         width: 1600,
         height: 1200,
         filename: "plot",
       });
-
-      // Restore the original layout if needed
     } catch (error) {
       console.error("Failed to save plot:", error);
+      alert("Failed to save plot. Please try again.");
+    } finally {
+      // Restore original layout
+      await Plotly.relayout(plotRef.current, originalLayout);
     }
-  } else {
-    console.error(
-      "plotRef.current is undefined. Ensure the plotRef is passed correctly."
-    );
-  }
-};
+  };
 
   return (
     <header className="bg-panel text-white h-32 flex items-center p-6 shadow-lg relative">
