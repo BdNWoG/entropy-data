@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
+import { format, parse } from "date-fns"; // Added for date parsing and formatting
 import { PlotData } from "./types";
 
 interface CSVPanelProps {
@@ -14,9 +15,28 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const [view, setView] = useState<"initial" | "table">("initial");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggingType, setDraggingType] = useState<"row" | "column" | null>(null);
+  const [targetDateFormat, setTargetDateFormat] = useState<string>("yyyy-MM-dd");
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
+
+  const dateFormats = [
+    "yyyy-MM-dd",         // ISO date
+    "MM/dd/yyyy",         // U.S. date
+    "dd-MM-yyyy",         // European date
+    "dd/MM/yyyy",         // Another European format
+    "MMM dd, yyyy",       // Abbreviated month
+    "MMMM dd, yyyy",      // Full month name
+    "yyyy/MM/dd",         // Alternate ISO format
+    "MM-dd-yyyy",         // Dashes with U.S. style
+    "yyyy-MM-dd HH:mm:ss",// ISO with time
+    "MM/dd/yyyy HH:mm:ss",// U.S. with time
+    "dd-MM-yyyy HH:mm:ss",// European with time
+    "yyyyMMdd",           // Compact format
+    "dd MMM yyyy",        // Day Month Year
+    "MMM dd, yyyy h:mm a",// 12-hour time
+    "yyyy-MM-dd'T'HH:mm:ss", // ISO 8601 with T
+  ];
 
   useEffect(() => {
     const updateTableHeight = () => {
@@ -50,11 +70,26 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
+  const standardizeDate = (date: string): string => {
+    for (const formatString of dateFormats) {
+      try {
+        const parsedDate = parse(date, formatString, new Date());
+        if (!isNaN(parsedDate.getTime())) {
+          return format(parsedDate, targetDateFormat);
+        }
+      } catch {
+        // Ignore and try the next format
+        continue;
+      }
+    }
+    return date; // Return the original value if no format matches
+  };
+
   const handleEditCell = (rowIndex: number, cellIndex: number, value: string) => {
     setEditableData((prevData) => {
       if (prevData) {
         const updatedData = [...prevData];
-        updatedData[rowIndex][cellIndex] = value;
+        updatedData[rowIndex][cellIndex] = cellIndex === 0 ? standardizeDate(value) : value;
         return updatedData;
       }
       return prevData;
@@ -150,7 +185,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       const processCSVData = (data: string[][]) => {
         if (!data || data.length < 2) return;
 
-        const xValues = data.slice(1).map((row) => row[0]);
+        const xValues = data.slice(1).map((row) => standardizeDate(row[0])); // Process dates in the first column
         const plotData: PlotData = {};
 
         data[0].slice(1).forEach((header, columnIndex) => {
@@ -165,7 +200,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       };
       processCSVData(editableData);
     }
-  }, [editableData, setPlotData]);
+  }, [editableData, setPlotData, targetDateFormat]);
 
   return (
     <div
@@ -197,6 +232,17 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       ) : (
         <div className="relative h-full flex flex-col">
           <div ref={buttonRowRef} className="flex gap-2 mb-4">
+            <select
+              value={targetDateFormat}
+              onChange={(e) => setTargetDateFormat(e.target.value)}
+              className="bg-gray-700 text-white px-4 py-2 rounded-md"
+            >
+              {dateFormats.map((format) => (
+                <option key={format} value={format}>
+                  {format}
+                </option>
+              ))}
+            </select>
             <button
               onClick={handleAddRow}
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
