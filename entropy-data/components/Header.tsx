@@ -90,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
         showlegend: true,
         legend: {
           orientation: "h",
-          yanchor: "bottom",
+          yanchor: "top",
           y: -0.15, // Move the legend up slightly
           xanchor: "center",
           x: 0.5,
