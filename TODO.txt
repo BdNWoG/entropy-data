@@ -1,6 +1,5 @@
 TODO:
 
-100%
 Bar line
 Formatting of slider and legend
 Date fix

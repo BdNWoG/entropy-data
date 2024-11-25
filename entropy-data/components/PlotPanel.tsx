@@ -38,32 +38,62 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
     if (typeof window !== "undefined" && plotData && internalPlotRef.current) {
       // Dynamically import Plotly.js
       import("plotly.js-dist-min").then((Plotly) => {
-        const traces: Data[] = Object.entries(plotData).map(
-          ([label, { timestamp, value }], index) => ({
-            x: timestamp,
-            y: value,
-            type: customization.chartType === "line" ? "scatter" : "bar",
-            mode: customization.chartType === "line" ? "lines" : undefined,
-            name: label,
-            fill:
-              customization.chartType === "line" && customization.fill
-                ? "tonexty"
-                : undefined,
-            stackgroup:
-              customization.stacked && customization.chartType === "line"
-                ? "one"
-                : undefined,
-            marker: { color: getColor(index) },
-            line:
-              customization.chartType === "line"
-                ? { width: 3, color: getColor(index) }
-                : undefined,
-            fillcolor:
-              customization.chartType === "line" && customization.fill
-                ? getFillColor(index)
-                : undefined,
-          })
-        );
+        let traces: Data[] = [];
+  
+        if (customization.chartType === "100%") {
+          // Normalize data to percentages for "100%" chart type
+          const summedValues: number[] = plotData[Object.keys(plotData)[0]].timestamp.map(
+            (_, idx) =>
+              Object.values(plotData).reduce(
+                (sum, { value }) => sum + value[idx],
+                0
+              )
+          );
+  
+          traces = Object.entries(plotData).map(
+            ([label, { timestamp, value }], index) => {
+              const normalizedY = value.map((v, idx) =>
+                summedValues[idx] === 0 ? 0 : (v / summedValues[idx]) * 100
+              );
+  
+              return {
+                x: timestamp,
+                y: normalizedY,
+                type: "bar",
+                name: label,
+                marker: { color: getColor(index) },
+              };
+            }
+          );
+        } else {
+          // Default behavior for other chart types
+          traces = Object.entries(plotData).map(
+            ([label, { timestamp, value }], index) => ({
+              x: timestamp,
+              y: value,
+              type: customization.chartType === "line" ? "scatter" : "bar",
+              mode: customization.chartType === "line" ? "lines" : undefined,
+              name: label,
+              fill:
+                customization.chartType === "line" && customization.fill
+                  ? "tonexty"
+                  : undefined,
+              stackgroup:
+                customization.stacked && customization.chartType === "line"
+                  ? "one"
+                  : undefined,
+              marker: { color: getColor(index) },
+              line:
+                customization.chartType === "line"
+                  ? { width: 3, color: getColor(index) }
+                  : undefined,
+              fillcolor:
+                customization.chartType === "line" && customization.fill
+                  ? getFillColor(index)
+                  : undefined,
+            })
+          );
+        }
   
         const layout: Partial<Layout> = {
           title: {
@@ -91,9 +121,12 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             },
           },
           yaxis: {
-            title: customization.yAxisTitle,
-            tickprefix: customization.yAxisPrefix,
-            ticksuffix: customization.yAxisSuffix,
+            title:
+              customization.chartType === "100%"
+                ? "Percentage (%)"
+                : customization.yAxisTitle,
+            tickprefix: customization.chartType === "100%" ? "" : customization.yAxisPrefix,
+            ticksuffix: customization.chartType === "100%" ? "%" : customization.yAxisSuffix,
             showgrid: customization.showGrid,
             gridcolor: "rgba(173, 176, 181, 0.6)",
             griddash: "dash",
@@ -104,25 +137,14 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             zeroline: true,
             zerolinewidth: 2,
             zerolinecolor: "white",
-            rangemode: "tozero",
-            autorange: customization.yAxisMax === "" ? true : false,
+            rangemode: customization.chartType === "100%" ? undefined : "tozero",
+            autorange: customization.chartType === "100%" || customization.yAxisMax === "" ? true : false,
             range:
-              customization.yAxisMax !== ""
+              customization.chartType === "100%"
+                ? [0, 100]
+                : customization.yAxisMax !== ""
                 ? [0, customization.yAxisMax]
                 : undefined,
-          },
-          yaxis2: {
-            title: customization.yAxisRightTitle || "",
-            tickprefix: customization.yAxisRightPrefix || "",
-            ticksuffix: customization.yAxisRightSuffix || "",
-            overlaying: "y",
-            side: "right",
-            showline: true,
-            linewidth: 2,
-            linecolor: "white",
-            zeroline: true,
-            zerolinewidth: 2,
-            zerolinecolor: "white",
           },
           legend: {
             orientation: "h",
@@ -133,21 +155,22 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             font: { size: 16, color: "white" },
           },
           margin: { l: 100, r: 100, t: 100, b: 100 },
+          barmode: "stack",
           images: [
             {
-                source: "https://i.imgur.com/1u4DIOJ.png",
-                xref: "paper",
-                yref: "paper",
-                x: 0.5,
-                y: 0.5,
-                sizex: 0.3,
-                sizey: 0.3,
-                xanchor: "center",
-                yanchor: "middle",
-                opacity: 0.4,
-                layer: "above",
+              source: "https://i.imgur.com/1u4DIOJ.png",
+              xref: "paper",
+              yref: "paper",
+              x: 0.5,
+              y: 0.5,
+              sizex: 0.3,
+              sizey: 0.3,
+              xanchor: "center",
+              yanchor: "middle",
+              opacity: 0.4,
+              layer: "above",
             },
-        ],
+          ],
           annotations: [
             {
               text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
@@ -165,10 +188,6 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
               borderpad: 4,
             },
           ],
-          barmode:
-            customization.stacked && customization.chartType === "bar"
-              ? "stack"
-              : undefined,
         };
   
         if (internalPlotRef.current) {
