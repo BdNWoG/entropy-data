@@ -94,13 +94,13 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
           y: -0.15, // Move the legend up slightly
           xanchor: "center",
           x: 0.5,
-          font: { size: 20, color: "white" }, // Increased legend font size
+          font: { size: 14, color: "white" }, // Increased legend font size
         },
         annotations: [
           // Add updated source annotation
           {
             text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
-            font: { size: 18, color: "white" }, // Increased source font size
+            font: { size: 14, color: "white" }, // Increased source font size
             showarrow: false,
             xref: "paper",
             yref: "paper",
