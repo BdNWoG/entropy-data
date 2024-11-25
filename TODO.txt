@@ -1,7 +1,5 @@
 TODO:
 
 toggle legend or slider
-Date fix
-footer change
 Formatting of slider and legend (in output)
 test

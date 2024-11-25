@@ -133,9 +133,13 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
-  const handleDeleteColumn = () => {
+  const handleDeleteColumn = (columnIndex: number) => {
     if (editableData && editableData[0].length > 1) {
-      const updatedData = editableData.map((row) => row.slice(0, -1));
+      const updatedData = editableData.map((row) => {
+        const newRow = [...row];
+        newRow.splice(columnIndex, 1); // Remove the specific column
+        return newRow;
+      });
       setEditableData(updatedData);
     }
   };
@@ -307,7 +311,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
                       />
                       <button
                         className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                        onClick={() => handleDeleteColumn()}
+                        onClick={() => handleDeleteColumn(columnIndex)} // Pass the column index here
                       >
                         ✕
                       </button>

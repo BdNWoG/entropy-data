@@ -163,8 +163,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           },
           legend: {
             orientation: "h",
-            yanchor: "bottom",
-            y: -0.25,
+            yanchor: "top",
+            y: -0.75,
             xanchor: "center",
             x: 0.5,
             font: { size: 16, color: "white" },
@@ -189,7 +189,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           annotations: [
             {
               text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
-              font: { size: 12, color: "white" },
+              font: { size: 8, color: "white" },
               showarrow: false,
               xref: "paper",
               yref: "paper",
