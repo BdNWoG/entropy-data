@@ -1,6 +1,7 @@
 TODO:
 
 Bar line
-Formatting of slider and legend
+toggle legend or slider
+Formatting of slider and legend (in output)
 Date fix
 test
