@@ -1,3 +1,8 @@
 TODO:
 
-Legend instead of slider - in the downloaded graph
+Functionality - new charts
+Date fix
+Delete first column
+Fix csv
+image
+test

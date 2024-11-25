@@ -96,16 +96,16 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
-  const handleDeleteRow = () => {
-    if (editableData && editableData.length > 1) {
-      const updatedData = editableData.slice(0, -1);
+  const handleDeleteRow = (rowIndex: number) => {
+    if (editableData) {
+      const updatedData = editableData.filter((_, index) => index !== rowIndex);
       setEditableData(updatedData);
     }
   };
 
-  const handleDeleteColumn = () => {
-    if (editableData && editableData[0].length > 1) {
-      const updatedData = editableData.map((row) => row.slice(0, -1));
+  const handleDeleteColumn = (columnIndex: number) => {
+    if (editableData) {
+      const updatedData = editableData.map((row) => row.filter((_, index) => index !== columnIndex));
       setEditableData(updatedData);
     }
   };
@@ -171,18 +171,6 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
               Add Column
             </button>
             <button
-              onClick={handleDeleteRow}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-            >
-              Delete Row
-            </button>
-            <button
-              onClick={handleDeleteColumn}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-            >
-              Delete Column
-            </button>
-            <button
               onClick={handleCancel}
               className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
             >
@@ -198,21 +186,38 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
               <table className="min-w-full table-auto border-collapse">
                 <thead>
                   <tr>
-                    {editableData?.[0].map((header, index) => (
+                    {editableData?.[0].map((header, columnIndex) => (
                       <th
-                        key={index}
-                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0"
+                        key={columnIndex}
+                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0 relative group"
                       >
                         {header}
+                        <button
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
+                          onClick={() => handleDeleteColumn(columnIndex)}
+                        >
+                          ✕
+                        </button>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {editableData?.slice(1).map((row, rowIndex) => (
-                    <tr key={rowIndex} className="even:bg-panel odd:bg-black">
+                    <tr key={rowIndex} className="even:bg-panel odd:bg-black group">
                       {row.map((cell, cellIndex) => (
-                        <td key={cellIndex} className="border border-borderBlue px-4 py-2 text-white">
+                        <td
+                          key={cellIndex}
+                          className="border border-borderBlue px-4 py-2 text-white relative"
+                        >
+                          {cellIndex === 0 && (
+                            <button
+                              className="absolute left-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
+                              onClick={() => handleDeleteRow(rowIndex + 1)}
+                            >
+                              ✕
+                            </button>
+                          )}
                           <input
                             type="text"
                             value={cell}
