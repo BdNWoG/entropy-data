@@ -215,6 +215,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     <div
       ref={containerRef}
       className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border"
+      style={{ height: "500px", width: "100%", maxWidth: "50vw" }} // Fixed box size
     >
       {view === "initial" ? (
         <div className="h-full flex flex-col items-center justify-center gap-4">
@@ -273,11 +274,15 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
           </div>
 
           <div
-            className="flex-grow overflow-auto border border-borderBlue rounded-md"
-            style={{ height: `${tableHeight}px` }}
+            className="flex-grow border border-borderBlue rounded-md overflow-hidden"
+            style={{
+              height: `${tableHeight}px`, // Fixed height for the table
+              width: "100%",
+              overflow: "hidden",
+            }}
           >
-            <div className="w-full overflow-x-auto">
-              <table className="min-w-full table-auto border-collapse">
+            <div className="overflow-x-auto h-full">
+              <table className="min-w-max table-auto border-collapse">
                 <thead>
                   <tr>
                     {editableData?.[0].map((header, columnIndex) => (
