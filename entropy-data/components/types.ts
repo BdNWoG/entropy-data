@@ -22,4 +22,4 @@ export interface Customization {
     fill: boolean;
     stacked: boolean;
     chartType: "line" | "bar" | "100%" | "bar-line";
-  }
+}

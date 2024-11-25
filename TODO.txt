@@ -4,5 +4,4 @@ TODO:
 Bar line
 Formatting of slider and legend
 Date fix
-Image
 test

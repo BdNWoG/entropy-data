@@ -133,6 +133,21 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             font: { size: 16, color: "white" },
           },
           margin: { l: 100, r: 100, t: 100, b: 100 },
+          images: [
+            {
+                source: "https://i.imgur.com/1u4DIOJ.png",
+                xref: "paper",
+                yref: "paper",
+                x: 0.5,
+                y: 0.5,
+                sizex: 0.3,
+                sizey: 0.3,
+                xanchor: "center",
+                yanchor: "middle",
+                opacity: 0.4,
+                layer: "above",
+            },
+        ],
           annotations: [
             {
               text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
