@@ -37,8 +37,12 @@ export default function Home() {
     <div className="min-h-screen bg-dark flex flex-col">
       <Header plotRef={plotRef} source={customization.source} />
       <div className="flex-grow flex">
-        <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
-        <CSVPanel setPlotData={setPlotData} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <CSVPanel setPlotData={setPlotData} />
+        </div>
       </div>
       <Footer customization={customization} setCustomization={updateCustomization} />
     </div>

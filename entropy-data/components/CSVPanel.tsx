@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
-import { format, parse } from "date-fns"; // Added for date parsing and formatting
+import { parse, format } from "date-fns"; // For date parsing and formatting
 import { PlotData } from "./types";
 
 interface CSVPanelProps {
@@ -21,21 +21,23 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
 
   const dateFormats = [
-    "yyyy-MM-dd",         // ISO date
-    "MM/dd/yyyy",         // U.S. date
-    "dd-MM-yyyy",         // European date
-    "dd/MM/yyyy",         // Another European format
-    "MMM dd, yyyy",       // Abbreviated month
-    "MMMM dd, yyyy",      // Full month name
-    "yyyy/MM/dd",         // Alternate ISO format
-    "MM-dd-yyyy",         // Dashes with U.S. style
-    "yyyy-MM-dd HH:mm:ss",// ISO with time
-    "MM/dd/yyyy HH:mm:ss",// U.S. with time
-    "dd-MM-yyyy HH:mm:ss",// European with time
-    "yyyyMMdd",           // Compact format
-    "dd MMM yyyy",        // Day Month Year
-    "MMM dd, yyyy h:mm a",// 12-hour time
-    "yyyy-MM-dd'T'HH:mm:ss", // ISO 8601 with T
+    "yyyy-MM-dd",                     // ISO date
+    "MM/dd/yyyy",                     // U.S. date
+    "dd-MM-yyyy",                     // European date
+    "dd/MM/yyyy",                     // Another European format
+    "MMM dd, yyyy",                   // Abbreviated month
+    "MMMM dd, yyyy",                  // Full month name
+    "yyyy/MM/dd",                     // Alternate ISO format
+    "MM-dd-yyyy",                     // Dashes with U.S. style
+    "yyyy-MM-dd HH:mm:ss",            // ISO with time
+    "MM/dd/yyyy HH:mm:ss",            // U.S. with time
+    "dd-MM-yyyy HH:mm:ss",            // European with time
+    "yyyyMMdd",                       // Compact format
+    "dd MMM yyyy",                    // Day Month Year
+    "MMM dd, yyyy h:mm a",            // 12-hour time
+    "yyyy-MM-dd'T'HH:mm:ss",          // ISO 8601 with T
+    "yyyy-MM-dd HH:mm:ss.SSS",        // ISO with milliseconds
+    "M/d/yy",                         // Short U.S. date (e.g., 1/1/23)
   ];
 
   useEffect(() => {
@@ -70,19 +72,26 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
-  const standardizeDate = (date: string): string => {
+  const standardizeDate = (date: string | undefined | null): string => {
+    if (!date || typeof date !== "string") {
+      return "";
+    }
+
+    const adjustedDate = date.includes("UTC") ? date.replace(" UTC", "") : date;
+  
     for (const formatString of dateFormats) {
       try {
-        const parsedDate = parse(date, formatString, new Date());
+        const parsedDate = parse(adjustedDate, formatString, new Date());
         if (!isNaN(parsedDate.getTime())) {
-          return format(parsedDate, targetDateFormat);
+          return format(parsedDate, targetDateFormat); // Immediately return the formatted date
         }
       } catch {
         // Ignore and try the next format
         continue;
       }
     }
-    return date; // Return the original value if no format matches
+  
+    return date;
   };
 
   const handleEditCell = (rowIndex: number, cellIndex: number, value: string) => {
