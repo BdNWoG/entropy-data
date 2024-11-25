@@ -184,6 +184,15 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
+  const handleTransposeCSV = () => {
+    if (editableData) {
+      const transposedData = editableData[0].map((_, colIndex) =>
+        editableData.map((row) => row[colIndex])
+      );
+      setEditableData(transposedData);
+    }
+  };
+
   useEffect(() => {
     if (view === "initial") {
       setPlotData(null);
@@ -260,6 +269,12 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
               className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
             >
               Cancel
+            </button>
+            <button
+              onClick={handleTransposeCSV}
+              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition-colors"
+            >
+              Flip CSV
             </button>
           </div>
 
