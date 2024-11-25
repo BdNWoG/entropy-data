@@ -12,8 +12,8 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const [editableData, setEditableData] = useState<string[][] | null>(null);
   const [tableHeight, setTableHeight] = useState<number>(0);
   const [view, setView] = useState<"initial" | "table">("initial");
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [draggingColumn, setDraggingColumn] = useState<number | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggingType, setDraggingType] = useState<"row" | "column" | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
@@ -81,16 +81,16 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
-  const handleDeleteRow = (rowIndex: number) => {
-    if (editableData) {
-      const updatedData = editableData.filter((_, index) => index !== rowIndex);
+  const handleDeleteRow = () => {
+    if (editableData && editableData.length > 1) {
+      const updatedData = editableData.slice(0, -1);
       setEditableData(updatedData);
     }
   };
 
-  const handleDeleteColumn = (columnIndex: number) => {
-    if (editableData) {
-      const updatedData = editableData.map((row) => row.filter((_, index) => index !== columnIndex));
+  const handleDeleteColumn = () => {
+    if (editableData && editableData[0].length > 1) {
+      const updatedData = editableData.map((row) => row.slice(0, -1));
       setEditableData(updatedData);
     }
   };
@@ -101,34 +101,41 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     setView("table");
   };
 
-  const handleDragStartRow = (rowIndex: number) => {
-    setDraggingIndex(rowIndex);
-  };
-
-  const handleDropRow = (targetIndex: number) => {
-    if (editableData && draggingIndex !== null) {
-      const reorderedData = [...editableData];
-      const [movedRow] = reorderedData.splice(draggingIndex, 1);
-      reorderedData.splice(targetIndex, 0, movedRow);
-      setEditableData(reorderedData);
-      setDraggingIndex(null);
+  const handleReorderRows = (sourceIndex: number, targetIndex: number) => {
+    if (editableData) {
+      const updatedData = [...editableData];
+      const [movedRow] = updatedData.splice(sourceIndex, 1);
+      updatedData.splice(targetIndex, 0, movedRow);
+      setEditableData(updatedData);
     }
   };
 
-  const handleDragStartColumn = (columnIndex: number) => {
-    setDraggingColumn(columnIndex);
+  const handleReorderColumns = (sourceIndex: number, targetIndex: number) => {
+    if (editableData) {
+      const updatedData = editableData.map((row) => {
+        const newRow = [...row];
+        const [movedCell] = newRow.splice(sourceIndex, 1);
+        newRow.splice(targetIndex, 0, movedCell);
+        return newRow;
+      });
+      setEditableData(updatedData);
+    }
   };
 
-  const handleDropColumn = (targetIndex: number) => {
-    if (editableData && draggingColumn !== null) {
-      const reorderedData = editableData.map((row) => {
-        const reorderedRow = [...row];
-        const [movedColumn] = reorderedRow.splice(draggingColumn, 1);
-        reorderedRow.splice(targetIndex, 0, movedColumn);
-        return reorderedRow;
-      });
-      setEditableData(reorderedData);
-      setDraggingColumn(null);
+  const handleDragStart = (index: number, type: "row" | "column") => {
+    setDraggedIndex(index);
+    setDraggingType(type);
+  };
+
+  const handleDrop = (targetIndex: number) => {
+    if (draggedIndex !== null && draggingType) {
+      if (draggingType === "row") {
+        handleReorderRows(draggedIndex, targetIndex);
+      } else if (draggingType === "column") {
+        handleReorderColumns(draggedIndex, targetIndex);
+      }
+      setDraggedIndex(null);
+      setDraggingType(null);
     }
   };
 
@@ -142,17 +149,17 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     if (editableData) {
       const processCSVData = (data: string[][]) => {
         if (!data || data.length < 2) return;
-    
+
         const xValues = data.slice(1).map((row) => row[0]);
         const plotData: PlotData = {};
-    
+
         data[0].slice(1).forEach((header, columnIndex) => {
           plotData[header] = {
             timestamp: xValues,
             value: data.slice(1).map((row) => parseFloat(row[columnIndex + 1] || "0")),
           };
         });
-    
+
         console.log("Updated plotData:", plotData); // Debug log to verify data
         setPlotData(plotData);
       };
@@ -221,16 +228,16 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
                     {editableData?.[0].map((header, columnIndex) => (
                       <th
                         key={columnIndex}
+                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group"
                         draggable
-                        onDragStart={() => handleDragStartColumn(columnIndex)}
+                        onDragStart={() => handleDragStart(columnIndex, "column")}
                         onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDropColumn(columnIndex)}
-                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0"
+                        onDrop={() => handleDrop(columnIndex)}
                       >
                         {header}
                         <button
                           className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                          onClick={() => handleDeleteColumn(columnIndex)}
+                          onClick={() => handleDeleteColumn()}
                         >
                           ✕
                         </button>
@@ -242,28 +249,28 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
                   {editableData?.slice(1).map((row, rowIndex) => (
                     <tr
                       key={rowIndex}
-                      draggable
-                      onDragStart={() => handleDragStartRow(rowIndex + 1)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => handleDropRow(rowIndex + 1)}
                       className="even:bg-panel odd:bg-black group"
+                      draggable
+                      onDragStart={() => handleDragStart(rowIndex, "row")}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(rowIndex)}
                     >
                       {row.map((cell, cellIndex) => (
                         <td
                           key={cellIndex}
-                          className="border border-borderBlue px-4 py-2 text-white"
+                          className="border border-borderBlue px-4 py-2 text-white relative"
                         >
                           {cellIndex === 0 && (
                             <button
                               className="absolute left-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                              onClick={() => handleDeleteRow(rowIndex + 1)}
+                              onClick={() => handleDeleteRow()}
                             >
                               ✕
                             </button>
                           )}
                           <input
                             type="text"
-                            value={cell || ""}
+                            value={cell}
                             onChange={(e) =>
                               handleEditCell(rowIndex + 1, cellIndex, e.target.value)
                             }
