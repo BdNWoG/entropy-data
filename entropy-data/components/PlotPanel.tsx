@@ -127,7 +127,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             linecolor: "#D1D5DB",
             showgrid: customization.showGrid,
             rangeslider: {
-              visible: true,
+              visible: false,
             },
           },
           yaxis: {
@@ -189,7 +189,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           annotations: [
             {
               text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
-              font: { size: 8, color: "white" },
+              font: { size: 12, color: "white" },
               showarrow: false,
               xref: "paper",
               yref: "paper",

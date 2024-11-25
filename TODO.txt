@@ -1,7 +1,7 @@
 TODO:
 
-Bar line
 toggle legend or slider
-Formatting of slider and legend (in output)
 Date fix
+footer change
+Formatting of slider and legend (in output)
 test
