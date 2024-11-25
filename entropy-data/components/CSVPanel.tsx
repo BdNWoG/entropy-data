@@ -50,23 +50,6 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
   };
 
-  const processCSVData = (data: string[][]) => {
-    if (!data || data.length < 2) return;
-
-    const xValues = data.slice(1).map((row) => row[0]);
-    const plotData: PlotData = {};
-
-    data[0].slice(1).forEach((header, columnIndex) => {
-      plotData[header] = {
-        timestamp: xValues,
-        value: data.slice(1).map((row) => parseFloat(row[columnIndex + 1] || "0")),
-      };
-    });
-
-    console.log("Updated plotData:", plotData); // Debug log to verify data
-    setPlotData(plotData);
-  };
-
   const handleEditCell = (rowIndex: number, cellIndex: number, value: string) => {
     setEditableData((prevData) => {
       if (prevData) {
@@ -157,9 +140,25 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
 
   useEffect(() => {
     if (editableData) {
+      const processCSVData = (data: string[][]) => {
+        if (!data || data.length < 2) return;
+    
+        const xValues = data.slice(1).map((row) => row[0]);
+        const plotData: PlotData = {};
+    
+        data[0].slice(1).forEach((header, columnIndex) => {
+          plotData[header] = {
+            timestamp: xValues,
+            value: data.slice(1).map((row) => parseFloat(row[columnIndex + 1] || "0")),
+          };
+        });
+    
+        console.log("Updated plotData:", plotData); // Debug log to verify data
+        setPlotData(plotData);
+      };
       processCSVData(editableData);
     }
-  }, [editableData]);
+  }, [editableData, setPlotData]);
 
   return (
     <div

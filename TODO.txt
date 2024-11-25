@@ -1,8 +1,8 @@
 TODO:
 
-Functionality - new charts
+100%
+Bar line
+Formatting of slider and legend
 Date fix
-Delete first column
-Fix csv
-image
+Image
 test
