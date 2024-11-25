@@ -273,28 +273,33 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
           >
             <div className="overflow-x-auto h-full">
               <table className="min-w-max table-auto border-collapse">
-                <thead>
-                  <tr>
-                    {editableData?.[0].map((header, columnIndex) => (
-                      <th
-                        key={columnIndex}
-                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group"
-                        draggable
-                        onDragStart={() => handleDragStart(columnIndex, "column")}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDrop(columnIndex)}
+              <thead>
+                <tr>
+                  {editableData?.[0].map((header, columnIndex) => (
+                    <th
+                      key={columnIndex}
+                      className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group"
+                      draggable
+                      onDragStart={() => handleDragStart(columnIndex, "column")}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(columnIndex)}
+                    >
+                      <input
+                        type="text"
+                        value={header}
+                        onChange={(e) => handleEditCell(0, columnIndex, e.target.value)}
+                        className="bg-transparent text-white w-full text-center"
+                      />
+                      <button
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
+                        onClick={() => handleDeleteColumn()}
                       >
-                        {header}
-                        <button
-                          className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                          onClick={() => handleDeleteColumn()}
-                        >
-                          ✕
-                        </button>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+                        ✕
+                      </button>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
                 <tbody>
                   {editableData?.slice(1).map((row, rowIndex) => (
                     <tr
