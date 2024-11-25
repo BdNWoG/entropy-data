@@ -15,10 +15,11 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const [view, setView] = useState<"initial" | "table">("initial");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggingType, setDraggingType] = useState<"row" | "column" | null>(null);
-  const [targetDateFormat, setTargetDateFormat] = useState<string>("yyyy-MM-dd");
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
+
+  const targetDateFormat = "yyyy-MM-dd"; // Fixed date format
 
   const dateFormats = [
     "yyyy-MM-dd",                     // ISO date
@@ -78,7 +79,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     }
 
     const adjustedDate = date.includes("UTC") ? date.replace(" UTC", "") : date;
-  
+
     for (const formatString of dateFormats) {
       try {
         const parsedDate = parse(adjustedDate, formatString, new Date());
@@ -90,7 +91,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
         continue;
       }
     }
-  
+
     return date;
   };
 
@@ -209,7 +210,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       };
       processCSVData(editableData);
     }
-  }, [editableData, setPlotData, targetDateFormat]);
+  }, [editableData, setPlotData]);
 
   return (
     <div
@@ -242,17 +243,6 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       ) : (
         <div className="relative h-full flex flex-col">
           <div ref={buttonRowRef} className="flex gap-2 mb-4">
-            <select
-              value={targetDateFormat}
-              onChange={(e) => setTargetDateFormat(e.target.value)}
-              className="bg-gray-700 text-white px-4 py-2 rounded-md"
-            >
-              {dateFormats.map((format) => (
-                <option key={format} value={format}>
-                  {format}
-                </option>
-              ))}
-            </select>
             <button
               onClick={handleAddRow}
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"

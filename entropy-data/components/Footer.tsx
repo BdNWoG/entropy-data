@@ -12,7 +12,7 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
   const handleToggleSet = () => setShowingFirstSet(!showingFirstSet);
 
   return (
-    <footer className="bg-panel text-white h-64 p-8 shadow-lg">
+    <footer className="bg-panel text-white h-70 p-8 shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl">Customization</h2>
         <div className="flex gap-4">
