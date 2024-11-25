@@ -12,6 +12,8 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const [editableData, setEditableData] = useState<string[][] | null>(null);
   const [tableHeight, setTableHeight] = useState<number>(0);
   const [view, setView] = useState<"initial" | "table">("initial");
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [draggingColumn, setDraggingColumn] = useState<number | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
@@ -116,6 +118,37 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     setView("table");
   };
 
+  const handleDragStartRow = (rowIndex: number) => {
+    setDraggingIndex(rowIndex);
+  };
+
+  const handleDropRow = (targetIndex: number) => {
+    if (editableData && draggingIndex !== null) {
+      const reorderedData = [...editableData];
+      const [movedRow] = reorderedData.splice(draggingIndex, 1);
+      reorderedData.splice(targetIndex, 0, movedRow);
+      setEditableData(reorderedData);
+      setDraggingIndex(null);
+    }
+  };
+
+  const handleDragStartColumn = (columnIndex: number) => {
+    setDraggingColumn(columnIndex);
+  };
+
+  const handleDropColumn = (targetIndex: number) => {
+    if (editableData && draggingColumn !== null) {
+      const reorderedData = editableData.map((row) => {
+        const reorderedRow = [...row];
+        const [movedColumn] = reorderedRow.splice(draggingColumn, 1);
+        reorderedRow.splice(targetIndex, 0, movedColumn);
+        return reorderedRow;
+      });
+      setEditableData(reorderedData);
+      setDraggingColumn(null);
+    }
+  };
+
   useEffect(() => {
     if (view === "initial") {
       setPlotData(null);
@@ -189,7 +222,11 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
                     {editableData?.[0].map((header, columnIndex) => (
                       <th
                         key={columnIndex}
-                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0 relative group"
+                        draggable
+                        onDragStart={() => handleDragStartColumn(columnIndex)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => handleDropColumn(columnIndex)}
+                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 sticky top-0"
                       >
                         {header}
                         <button
@@ -204,11 +241,18 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
                 </thead>
                 <tbody>
                   {editableData?.slice(1).map((row, rowIndex) => (
-                    <tr key={rowIndex} className="even:bg-panel odd:bg-black group">
+                    <tr
+                      key={rowIndex}
+                      draggable
+                      onDragStart={() => handleDragStartRow(rowIndex + 1)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDropRow(rowIndex + 1)}
+                      className="even:bg-panel odd:bg-black group"
+                    >
                       {row.map((cell, cellIndex) => (
                         <td
                           key={cellIndex}
-                          className="border border-borderBlue px-4 py-2 text-white relative"
+                          className="border border-borderBlue px-4 py-2 text-white"
                         >
                           {cellIndex === 0 && (
                             <button
@@ -220,7 +264,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
                           )}
                           <input
                             type="text"
-                            value={cell}
+                            value={cell || ""}
                             onChange={(e) =>
                               handleEditCell(rowIndex + 1, cellIndex, e.target.value)
                             }
