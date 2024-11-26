@@ -149,9 +149,10 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               <input
                 type="number"
                 value={customization.yAxisMax}
-                onChange={(e) =>
-                  setCustomization({ yAxisMax: Number(e.target.value) || "" })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCustomization({ yAxisMax: value === "" ? "" : Number(value) });
+                }}
                 className="bg-borderBlue text-white w-full p-2 rounded-md"
               />
             </div>

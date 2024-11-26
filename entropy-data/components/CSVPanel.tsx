@@ -46,8 +46,8 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       if (containerRef.current && buttonRowRef.current) {
         const containerHeight = containerRef.current.clientHeight;
         const buttonRowHeight = buttonRowRef.current.clientHeight;
-        const padding = 16;
-        setTableHeight(containerHeight - buttonRowHeight - padding);
+        const padding = 30;
+        setTableHeight(containerHeight - buttonRowHeight - padding * 1000);
       }
     };
 

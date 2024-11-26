@@ -21,6 +21,9 @@ export default function Home() {
     yAxisPrefix: "$",
     yAxisSuffix: "",
     yAxisMax: "",
+    yAxisRightTitle: "",       // Add missing properties with default values
+    yAxisRightPrefix: "",
+    yAxisRightSuffix: "",
     showGrid: true,
     xAxisType: "date",
     source: "Source: ",

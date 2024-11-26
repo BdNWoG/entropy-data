@@ -2,26 +2,7 @@
 
 import { useEffect, useRef, useImperativeHandle } from "react";
 import { Layout, Data } from "plotly.js-dist-min";
-import { PlotData } from "./types";
-
-interface Customization {
-  title: string;
-  subtitle: string;
-  xAxisTitle: string;
-  yAxisTitle: string;
-  yAxisPrefix: string;
-  yAxisSuffix: string;
-  yAxisMax: number | "";
-  yAxisRightTitle?: string;
-  yAxisRightPrefix?: string;
-  yAxisRightSuffix?: string;
-  showGrid: boolean;
-  xAxisType: "date" | "category" | "linear";
-  source: string;
-  fill: boolean;
-  stacked: boolean;
-  chartType: "line" | "bar" | "100%" | "bar-line";
-}
+import { PlotData, Customization } from "./types";
 
 interface PlotPanelProps {
   plotData: PlotData | null;
@@ -118,7 +99,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           font: { size: 14, color: "white" },
           xaxis: {
             title: customization.xAxisTitle  || "X Axis",
-            type: customization.xAxisType  || "Date",
+            type: customization.xAxisType  || "date",
             tickformat:
               customization.xAxisType === "date" ? "%b %Y" : undefined,
             tickfont: { size: 14, color: "white" },
@@ -148,8 +129,12 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             zerolinewidth: 2,
             zerolinecolor: "white",
             rangemode: customization.chartType === "100%" ? undefined : "tozero",
-            autorange: customization.chartType === "100%" ? false : true,
-            range: customization.chartType === "100%" ? [0, 100] : undefined,
+            autorange: customization.chartType === "100%" 
+              ? false 
+              : customization.yAxisMax === "" ? true : false,
+            range: customization.chartType === "100%" 
+              ? [0, 100] 
+              : customization.yAxisMax === "" ? undefined : [0, customization.yAxisMax],
           },
           yaxis2: {
             title: customization.yAxisRightTitle || "",
@@ -206,7 +191,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
         };
 
         if (internalPlotRef.current) {
-          Plotly.react(internalPlotRef.current, traces, layout);
+          Plotly.purge(internalPlotRef.current);
+          Plotly.newPlot(internalPlotRef.current, traces, layout);
         }
       });
     } else if (plotData === null && internalPlotRef.current) {
