@@ -2,8 +2,6 @@ TODO:
 
 Not stacked bar and line
 
-cusomtization - 
-dollar sign prefix
-modifying axis titles and prefixes
+destructure
 
 legends bunched up

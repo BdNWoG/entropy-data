@@ -149,7 +149,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           legend: {
             orientation: "h",
             yanchor: "top",
-            y: -0.5,
+            y: -0.25,
             xanchor: "center",
             x: 0.5,
             font: { size: 16, color: "white" },
