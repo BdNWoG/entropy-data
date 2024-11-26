@@ -91,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
         legend: {
           orientation: "h",
           yanchor: "top",
-          y: -0.15, // Move the legend up slightly
+          y: -0.5, // Move the legend up slightly
           xanchor: "center",
           x: 0.5,
           font: { size: 14, color: "white" }, // Increased legend font size

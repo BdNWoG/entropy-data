@@ -117,8 +117,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           paper_bgcolor: "#030d1c",
           font: { size: 14, color: "white" },
           xaxis: {
-            title: customization.xAxisTitle,
-            type: customization.xAxisType,
+            title: customization.xAxisTitle  || "X Axis",
+            type: customization.xAxisType  || "Date",
             tickformat:
               customization.xAxisType === "date" ? "%b %Y" : undefined,
             tickfont: { size: 14, color: "white" },
@@ -134,9 +134,9 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             title:
               customization.chartType === "100%"
                 ? "Percentage (%)"
-                : customization.yAxisTitle,
-            tickprefix: customization.chartType === "100%" ? "" : customization.yAxisPrefix,
-            ticksuffix: customization.chartType === "100%" ? "%" : customization.yAxisSuffix,
+                : customization.yAxisTitle || "",
+            tickprefix: customization.chartType === "100%" ? "" : customization.yAxisPrefix || "",
+            ticksuffix: customization.chartType === "100%" ? "%" : customization.yAxisSuffix || "",
             showgrid: customization.showGrid,
             gridcolor: "rgba(173, 176, 181, 0.6)",
             griddash: "dash",
@@ -152,9 +152,9 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
             range: customization.chartType === "100%" ? [0, 100] : undefined,
           },
           yaxis2: {
-            title: customization.yAxisRightTitle,
-            tickprefix: customization.yAxisRightPrefix,
-            ticksuffix: customization.yAxisRightSuffix,
+            title: customization.yAxisRightTitle || "",
+            tickprefix: customization.yAxisRightPrefix || "",
+            ticksuffix: customization.yAxisRightSuffix || "",
             overlaying: "y",
             side: "right",
             showgrid: false,
@@ -164,7 +164,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
           legend: {
             orientation: "h",
             yanchor: "top",
-            y: -0.75,
+            y: -0.5,
             xanchor: "center",
             x: 0.5,
             font: { size: 16, color: "white" },

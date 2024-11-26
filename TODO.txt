@@ -1,5 +1,9 @@
 TODO:
 
-toggle legend or slider
-Formatting of slider and legend (in output)
-test
+Not stacked bar and line
+
+cusomtization - 
+dollar sign prefix
+modifying axis titles and prefixes
+
+legends bunched up

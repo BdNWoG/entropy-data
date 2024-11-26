@@ -229,7 +229,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     <div
       ref={containerRef}
       className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border"
-      style={{ height: "500px", width: "100%", maxWidth: "50vw" }} // Fixed box size
+      style={{ height: "450px", width: "100%", maxWidth: "50vw" }} // Fixed box size
     >
       {view === "initial" ? (
         <div className="h-full flex flex-col items-center justify-center gap-4">
