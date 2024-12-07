@@ -12,7 +12,7 @@ interface PlotPanelProps {
   colors: string[]; 
 }
 
-const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef }) => {
+const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef, colors }) => {
   const internalPlotRef = useRef<HTMLDivElement | null>(null);
 
   useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement);
@@ -41,7 +41,11 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
               y: normalizedY,
               type: "bar",
               name: label,
-              marker: { color: getColor(index) },
+              marker: { color: colors[index % colors.length]  },
+              line: {
+                width: 3,
+                color: colors[index % colors.length], // Line color
+              },
             };
           });
         } else if (customization.chartType === "bar-line") {

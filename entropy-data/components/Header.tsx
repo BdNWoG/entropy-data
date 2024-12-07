@@ -120,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
             xref: "paper",
             yref: "paper",
             x: 0.99,
-            y: -0.15,
+            y: -0.1,
             xanchor: "right",
             yanchor: "bottom",
             bgcolor: "#1f2c56",
