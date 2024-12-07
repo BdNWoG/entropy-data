@@ -10,9 +10,10 @@ interface PlotPanelProps {
   customization: Customization;
   plotRef: React.RefObject<HTMLDivElement>;
   colors: string[]; 
+  sourceImage: string;
 }
 
-const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef, colors }) => {
+const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef, colors, sourceImage }) => {
   const internalPlotRef = useRef<HTMLDivElement | null>(null);
 
   useImperativeHandle(plotRef, () => internalPlotRef.current as HTMLDivElement);
@@ -164,7 +165,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
           barmode: customization.stacked ? "stack" : undefined,
           images: [
             {
-              source: "https://i.imgur.com/1u4DIOJ.png",
+              source: sourceImage,
               xref: "paper",
               yref: "paper",
               x: 0.5,

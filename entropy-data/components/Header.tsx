@@ -11,6 +11,8 @@ interface HeaderProps {
   source: string;
   colors: string[];
   setColors: (colors: string[]) => void;
+  sourceImage: string;
+  setSourceImage: (image: string) => void;
 }
 
 // Custom type for Extended Plotly HTMLElement
@@ -18,11 +20,13 @@ type ExtendedPlotlyHTMLElement = PlotlyHTMLElement & {
   layout: Partial<Layout> & { annotations?: Array<Partial<Plotly.Annotations>> };
 };
 
-const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) => {
+const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sourceImage, setSourceImage }) => {
   const [Plotly, setPlotly] = useState<typeof import("plotly.js-dist-min") | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
+  const [isLogoPanelOpen, setIsLogoPanelOpen] = useState(false);
+  const [newSourceImage, setNewSourceImage] = useState(sourceImage);
 
-  // Load Plotly dynamically once
   useEffect(() => {
     const loadPlotly = async () => {
       try {
@@ -36,8 +40,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
     loadPlotly();
   }, []);
 
-  const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
-
   const toggleColorPanel = () => {
     setIsColorPanelOpen(!isColorPanelOpen);
   };
@@ -50,6 +52,16 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
 
   const toggleProfilePopup = () => {
     setIsProfileOpen(!isProfileOpen);
+  };
+
+  const toggleLogoPanel = () => {
+    setNewSourceImage(sourceImage); 
+    setIsLogoPanelOpen(!isLogoPanelOpen);
+  };
+
+  const applyLogoChange = () => {
+    setSourceImage(newSourceImage);
+    setIsLogoPanelOpen(false);
   };
 
   const getExportLayout = (originalLayout: Partial<Layout>, source: string): Partial<Layout> => ({
@@ -170,7 +182,8 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
           <span className="text-sm text-center">Save</span>
         </div>
 
-        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
+        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
+        onClick={toggleLogoPanel}>
           <AiOutlinePicture className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Add Logo</span>
         </div>
@@ -227,7 +240,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
         {isColorPanelOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="relative bg-white text-black rounded-lg shadow-lg p-8 w-[80%] h-[80%]">
-              {/* Close Button */}
               <button
                 onClick={() => setIsColorPanelOpen(false)}
                 className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold"
@@ -237,20 +249,17 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
 
               <h3 className="text-xl font-semibold mb-6">Customize Colors</h3>
 
-              {/* Grid Layout for Colors */}
               <div className="grid grid-cols-4 gap-6 overflow-y-auto h-[calc(100%-6rem)]">
                 {colors.map((color, index) => (
                   <div
                     key={index}
                     className="flex flex-col items-center gap-2 p-4 border rounded-lg shadow"
                   >
-                    {/* Color Preview */}
                     <span
                       className="w-12 h-12 rounded-full border"
                       style={{ backgroundColor: color }}
                     />
 
-                    {/* Hex Code Input */}
                     <input
                       type="text"
                       value={color}
@@ -258,7 +267,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
                       className="border p-2 rounded-md w-full text-center"
                     />
 
-                    {/* Color Picker */}
                     <div className="w-full flex justify-center">
                       <SketchPicker
                         color={color}
@@ -270,13 +278,59 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
                 ))}
               </div>
 
-              {/* Apply Button */}
               <div className="mt-4 flex justify-center">
                 <button
                   onClick={() => {
-                    // Logic to apply changes can go here
                     setIsColorPanelOpen(false);
                   }}
+                  className="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition"
+                >
+                  Apply Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isLogoPanelOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="relative bg-white text-black rounded-lg shadow-lg p-8 w-[80%] max-w-md">
+              {/* Close Button */}
+              <button
+                onClick={toggleLogoPanel}
+                className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold"
+              >
+                &times;
+              </button>
+
+              <h3 className="text-xl font-semibold mb-6">Update Logo</h3>
+              <div className="mb-4">
+                <label htmlFor="logo-url" className="block text-sm font-medium text-gray-700 mb-2">
+                  Logo URL:
+                </label>
+                <input
+                  id="logo-url"
+                  type="text"
+                  value={newSourceImage}
+                  onChange={(e) => setNewSourceImage(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter logo image URL"
+                />
+              </div>
+
+              <div className="flex justify-center mb-6">
+                <Image
+                  src={newSourceImage || "https://via.placeholder.com/150"}
+                  alt="Logo Preview"
+                  width={400}
+                  height={400}
+                  className="rounded-lg border"
+                />
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={applyLogoChange}
                   className="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition"
                 >
                   Apply Changes

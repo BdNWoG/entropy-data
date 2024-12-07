@@ -35,6 +35,8 @@ export default function Home() {
 
   const [colors, setColors] = useState<string[]>([...defaultColors]);
 
+  const [sourceImage, setSourceImage] = useState("https://i.imgur.com/1u4DIOJ.png");
+
   const updateCustomization = (updates: Partial<Customization>) => {
     setCustomization((prev) => ({ ...prev, ...updates }));
   };
@@ -46,6 +48,8 @@ export default function Home() {
         source={customization.source}
         colors={colors}
         setColors={setColors}
+        sourceImage={sourceImage} 
+        setSourceImage={setSourceImage}
       />
       <div className="flex-grow flex">
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -53,7 +57,8 @@ export default function Home() {
             plotData={plotData}
             customization={customization}
             plotRef={plotRef}
-            colors={colors} // Pass updated colors
+            colors={colors}
+            sourceImage={sourceImage} 
           />
         </div>
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
