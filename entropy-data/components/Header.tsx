@@ -91,10 +91,10 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
         legend: {
           orientation: "h",
           yanchor: "top",
-          y: -0.25, // Move the legend up slightly
+          y: -0.15, 
           xanchor: "center",
           x: 0.5,
-          font: { size: 14, color: "white" }, // Increased legend font size
+          font: { size: 13, color: "white" }, // Increased legend font size
         },
         annotations: [
           // Add updated source annotation
@@ -105,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source }) => {
             xref: "paper",
             yref: "paper",
             x: 0.99,
-            y: -0.1,
+            y: -0.2,
             xanchor: "right",
             yanchor: "bottom",
             bgcolor: "#1f2c56",

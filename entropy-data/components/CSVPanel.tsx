@@ -323,7 +323,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
               onClick={handleSortAndGroupByDate}
               className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
             >
-              Sort and Group by Date
+              Fix Date
             </button>
           </div>
 
