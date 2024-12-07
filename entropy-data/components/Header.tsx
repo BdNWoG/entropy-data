@@ -52,17 +52,60 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
     setIsProfileOpen(!isProfileOpen);
   };
 
+  const getExportLayout = (originalLayout: Partial<Layout>, source: string): Partial<Layout> => ({
+    ...originalLayout,
+    xaxis: {
+      ...originalLayout.xaxis,
+      rangeslider: { visible: false },
+    },
+    sliders: [],
+    updatemenus: [],
+    showlegend: true,
+    legend: {
+      orientation: "h",
+      yanchor: "top",
+      y: -0.1,
+      xanchor: "center",
+      x: 0.5,
+      font: { size: 13, color: "white" },
+    },
+    annotations: [
+      {
+        text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
+        font: { size: 14, color: "white" },
+        showarrow: false,
+        xref: "paper",
+        yref: "paper",
+        x: 0.99,
+        y: -0.1,
+        xanchor: "right",
+        yanchor: "bottom",
+        bgcolor: "#1f2c56",
+        bordercolor: "white",
+        borderwidth: 1,
+        borderpad: 6,
+      },
+    ],
+  });
+
   const copyPlot = async () => {
     if (!Plotly || !plotRef.current) {
       alert("Plotly or plot reference not available.");
       return;
     }
 
+    const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
+    const originalLayout = plotElement.layout || {};
+
     try {
+      const exportLayout = getExportLayout(originalLayout, source);
+
+      await Plotly.update(plotRef.current, {}, exportLayout);
+
       const imageDataUrl = await Plotly.toImage(plotRef.current, {
         format: "png",
-        width: 800,
-        height: 600,
+        width: 1600,
+        height: 1200,
       });
 
       if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
@@ -70,7 +113,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob }),
         ]);
-        alert("Plot copied to clipboard!");
       } else {
         alert("Your browser does not support Clipboard API for images.");
       }
@@ -86,55 +128,13 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
       return;
     }
   
-    // Safely cast the element to ExtendedPlotlyHTMLElement
     const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
     const originalLayout = plotElement.layout || {};
   
     try {
-      const downloadLayout: Partial<Layout> = {
-        ...originalLayout,
-        // Remove the range slider
-        xaxis: {
-          ...originalLayout.xaxis,
-          rangeslider: {
-            visible: false, // Disable the range slider
-          },
-        },
-        sliders: [], // Ensure any other sliders are removed
-        updatemenus: [], // Remove any interactive menus
-        showlegend: true,
-        legend: {
-          orientation: "h",
-          yanchor: "top",
-          y: -0.1, 
-          xanchor: "center",
-          x: 0.5,
-          font: { size: 13, color: "white" }, 
-        },
-        annotations: [
-          // Add updated source annotation
-          {
-            text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
-            font: { size: 14, color: "white" }, // Increased source font size
-            showarrow: false,
-            xref: "paper",
-            yref: "paper",
-            x: 0.99,
-            y: -0.1,
-            xanchor: "right",
-            yanchor: "bottom",
-            bgcolor: "#1f2c56",
-            bordercolor: "white",
-            borderwidth: 1,
-            borderpad: 6, // Added padding for better aesthetics
-          },
-        ],
-      };
+      const exportLayout = getExportLayout(originalLayout, source);
+      await Plotly.update(plotRef.current, {}, exportLayout);
   
-      // Apply the new layout for download
-      await Plotly.update(plotRef.current, {}, downloadLayout);
-  
-      // Download the image
       await Plotly.downloadImage(plotRef.current, {
         format: "png",
         width: 1600,
@@ -145,7 +145,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors }) =
       console.error("Failed to save plot:", error);
       alert("Failed to save plot. Please try again.");
     } finally {
-      // Restore the original layout
       await Plotly.relayout(plotRef.current, originalLayout);
     }
   };  
