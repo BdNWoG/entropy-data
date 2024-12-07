@@ -9,6 +9,7 @@ interface PlotPanelProps {
   plotData: PlotData | null;
   customization: Customization;
   plotRef: React.RefObject<HTMLDivElement>;
+  colors: string[]; 
 }
 
 const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef }) => {

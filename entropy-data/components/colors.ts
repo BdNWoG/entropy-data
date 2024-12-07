@@ -1,11 +1,11 @@
-// components/colors.ts
 export const colors = [
     "#213147", "#4a4a4a", "#0557f5", "#ff677d", "#9ecff2", "#ffcdb2",
     "#ffd1dc", "#e0e3d1", "#16553b", "#959595", "#9ab4e6", "#ffa060",
     "#a172c3", "#4a6db1", "#041d7e", "#04e3c9"
 ];
 
-export const getColor = (index: number) => colors[index % colors.length];
+export const getColor = (index: number, customColors = colors) =>
+    customColors[index % customColors.length];
 
 export const getFillColor = (index: number) => {
     const color = colors[index % colors.length];

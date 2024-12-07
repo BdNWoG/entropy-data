@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CSVPanel from "../components/CSVPanel";
 import { PlotData, Customization } from "../components/types";
+import { colors as defaultColors } from "../components/colors";
 
 const PlotPanel = dynamic(() => import("../components/PlotPanel"), { ssr: false });
 
@@ -32,16 +33,28 @@ export default function Home() {
     chartType: "line",
   });
 
+  const [colors, setColors] = useState<string[]>([...defaultColors]);
+
   const updateCustomization = (updates: Partial<Customization>) => {
     setCustomization((prev) => ({ ...prev, ...updates }));
   };
 
   return (
     <div className="min-h-screen bg-dark flex flex-col">
-      <Header plotRef={plotRef} source={customization.source} />
+      <Header
+        plotRef={plotRef}
+        source={customization.source}
+        colors={colors}
+        setColors={setColors}
+      />
       <div className="flex-grow flex">
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <PlotPanel plotData={plotData} customization={customization} plotRef={plotRef} />
+          <PlotPanel
+            plotData={plotData}
+            customization={customization}
+            plotRef={plotRef}
+            colors={colors} // Pass updated colors
+          />
         </div>
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <CSVPanel setPlotData={setPlotData} />
