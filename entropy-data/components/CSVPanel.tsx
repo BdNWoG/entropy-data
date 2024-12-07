@@ -59,17 +59,56 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     };
   }, []);
 
+  const sortAndGroupByDate = (data: string[][]): string[][] => {
+    if (data.length < 2) return data; // No sorting needed for empty or header-only data
+  
+    const header = data[0];
+    const body = data.slice(1);
+  
+    // Standardize dates and group rows by date
+    const groupedData: Record<string, number[]> = {};
+  
+    body.forEach((row) => {
+      const date = standardizeDate(row[0]); // Standardized date
+      if (!date) return; // Skip rows with invalid dates
+  
+      if (!groupedData[date]) {
+        groupedData[date] = new Array(row.length - 1).fill(0); // Initialize an array to sum values
+      }
+  
+      row.slice(1).forEach((value, index) => {
+        const numericValue = parseFloat(value) || 0; // Parse numeric values, default to 0
+        groupedData[date][index] += numericValue; // Sum up values
+      });
+    });
+  
+    // Convert grouped data back into an array and sort by date
+    const sortedGroupedData = Object.entries(groupedData)
+      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime()) // Sort by date
+      .map(([date, values]) => [date, ...values.map((v) => v.toString())]); // Format back to strings
+  
+    return [header, ...sortedGroupedData];
+  };
+  
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       Papa.parse(file, {
         complete: (result) => {
-          const data = result.data as string[][]; // Parsed CSV data
+          let data = result.data as string[][]; // Parsed CSV data
+          data = sortAndGroupByDate(data); // Sort and group data by the first column (dates)
           setEditableData(data);
           setView("table");
         },
         error: (error) => console.error("Error parsing CSV:", error),
       });
+    }
+  };
+  
+  const handleSortAndGroupByDate = () => {
+    if (editableData) {
+      const sortedAndGroupedData = sortAndGroupByDate(editableData);
+      setEditableData(sortedAndGroupedData);
     }
   };
 
@@ -279,6 +318,12 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
               className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition-colors"
             >
               Flip CSV
+            </button>
+            <button
+              onClick={handleSortAndGroupByDate}
+              className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+            >
+              Sort and Group by Date
             </button>
           </div>
 
