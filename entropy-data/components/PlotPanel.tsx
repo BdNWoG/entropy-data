@@ -3,6 +3,7 @@
 import { useEffect, useRef, useImperativeHandle } from "react";
 import { Layout, Data } from "plotly.js-dist-min";
 import { PlotData, Customization } from "./types";
+import { getColor, getFillColor } from "./colors"; 
 
 interface PlotPanelProps {
   plotData: PlotData | null;
@@ -220,29 +221,6 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef 
       )}
     </div>
   );
-};
-
-// Define the color palette
-const colors = [
-  "#213147", "#4a4a4a", "#0557f5", "#ff677d", "#9ecff2", "#ffcdb2",
-  "#ffd1dc", "#e0e3d1", "#16553b", "#959595", "#9ab4e6", "#ffa060",
-  "#a172c3", "#4a6db1", "#041d7e", "#04e3c9"
-];
-
-const getColor = (index: number) => colors[index % colors.length];
-
-const getFillColor = (index: number) => {
-  const color = colors[index % colors.length];
-  const [r, g, b] = hexToRgb(color);
-  return `rgba(${r}, ${g}, ${b}, 0.5)`;
-};
-
-const hexToRgb = (hex: string) => {
-  const bigint = parseInt(hex.slice(1), 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return [r, g, b];
 };
 
 export default PlotPanel;

@@ -332,7 +332,8 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
             style={{
               height: `${tableHeight}px`, // Fixed height for the table
               width: "100%",
-              overflow: "hidden",
+              overflowY: "auto", // Enable vertical scrolling
+              overflowX: "auto",
             }}
           >
             <div className="overflow-x-auto h-full">
