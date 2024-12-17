@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { AiOutlineCopy, AiOutlineSave, AiOutlinePicture } from "react-icons/ai";
-import { FiSettings, FiLogIn, FiStar } from "react-icons/fi";
+import { FiSettings, FiLogIn, FiStar, FiDownload } from "react-icons/fi";
 import { MdColorLens } from "react-icons/md";
 import Image from "next/image";
 import { Layout, PlotlyHTMLElement } from "plotly.js";
@@ -21,12 +21,20 @@ type ExtendedPlotlyHTMLElement = PlotlyHTMLElement & {
   layout: Partial<Layout> & { annotations?: Array<Partial<Plotly.Annotations>> };
 };
 
-const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sourceImage, setSourceImage }) => {
+const Header: React.FC<HeaderProps> = ({
+  plotRef,
+  source,
+  colors,
+  setColors,
+  sourceImage,
+  setSourceImage,
+}) => {
   const [Plotly, setPlotly] = useState<typeof import("plotly.js-dist-min") | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
   const [isLogoPanelOpen, setIsLogoPanelOpen] = useState(false);
   const [newSourceImage, setNewSourceImage] = useState(sourceImage);
+  const [isSaving, setIsSaving] = useState(false); // Added loading state
 
   useEffect(() => {
     const loadPlotly = async () => {
@@ -56,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
   };
 
   const toggleLogoPanel = () => {
-    setNewSourceImage(sourceImage); 
+    setNewSourceImage(sourceImage);
     setIsLogoPanelOpen(!isLogoPanelOpen);
   };
 
@@ -67,21 +75,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
 
   const getExportLayout = (originalLayout: Partial<Layout>, source: string): Partial<Layout> => ({
     ...originalLayout,
-    xaxis: {
-      ...originalLayout.xaxis,
-      rangeslider: { visible: false },
-    },
-    sliders: [],
-    updatemenus: [],
-    showlegend: true,
-    legend: {
-      orientation: "h",
-      yanchor: "top",
-      y: -0.1,
-      xanchor: "center",
-      x: 0.5,
-      font: { size: 13, color: "white" },
-    },
     annotations: [
       {
         text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
@@ -99,95 +92,189 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
         borderpad: 6,
       },
     ],
+    showlegend: true,
+    legend: {
+      orientation: "h",
+      yanchor: "top",
+      y: -0.1,
+      xanchor: "center",
+      x: 0.5,
+      font: { size: 13, color: "white" },
+    },
   });
 
-  const copyPlot = async () => {
+  const savePlotWithKaleido = async (format: "png" | "jpeg" | "svg") => {
     if (!Plotly || !plotRef.current) {
       alert("Plotly or plot reference not available.");
       return;
     }
 
-    const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
-    const originalLayout = plotElement.layout || {};
+    setIsSaving(true);
 
     try {
+      const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
+      const originalLayout = plotElement.layout || {};
       const exportLayout = getExportLayout(originalLayout, source);
 
-      await Plotly.update(plotRef.current, {}, exportLayout);
+      // Construct the figure JSON that Kaleido can use
+      const plotData = plotElement.data;
+      const layout = exportLayout;
 
-      const imageDataUrl = await Plotly.toImage(plotRef.current, {
-        format: "png",
-        width: 1600,
-        height: 1200,
+      // Define width, height, scale for ultra high resolution
+      const width = 2000;
+      const height = 1600;
+      const scale = 3;
+
+      // Make POST request to the Kaleido export endpoint (needs to be implemented server-side)
+      const response = await fetch("/api/kaleidoExport", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plotData,
+          layout,
+          format,
+          width,
+          height,
+          scale,
+        }),
       });
 
+      if (!response.ok) {
+        let errorMessage = `Failed to export plot${format === 'svg' ? ' as SVG' : ''}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error("Failed to parse error response as JSON:", parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = format === "svg" ? "plot_high_res.svg" : "plot_high_res.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Failed to export plot:", error.message);
+        alert(`Failed to export plot: ${error.message}`);
+      } else {
+        console.error("Failed to export plot:", error);
+        alert("Failed to export plot due to an unexpected error.");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const copyPlotWithKaleido = async () => {
+    if (!Plotly || !plotRef.current) {
+      alert("Plotly or plot reference not available.");
+      return;
+    }
+
+    try {
+      const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
+      const originalLayout = plotElement.layout || {};
+      const exportLayout = getExportLayout(originalLayout, source);
+
+      const plotData = plotElement.data;
+      const layout = exportLayout;
+
+      const width = 2000;
+      const height = 1600;
+      const scale = 3;
+
+      const response = await fetch("/api/kaleidoExport", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plotData,
+          layout,
+          format: "png",
+          width,
+          height,
+          scale,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to export plot";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error("Failed to parse error response as JSON:", parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+      const imageDataUrl = URL.createObjectURL(blob);
+
       if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
-        const blob = await (await fetch(imageDataUrl)).blob();
+        const fetchedBlob = await (await fetch(imageDataUrl)).blob();
         await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blob }),
+          new ClipboardItem({ "image/png": fetchedBlob }),
         ]);
+        alert("Plot copied to clipboard.");
       } else {
         alert("Your browser does not support Clipboard API for images.");
       }
-    } catch (error) {
-      console.error("Failed to copy plot:", error);
-      alert("Failed to copy plot. Please try again.");
+
+      window.URL.revokeObjectURL(imageDataUrl);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Failed to copy plot:", error.message);
+        alert(`Failed to copy plot: ${error.message}`);
+      } else {
+        console.error("Failed to copy plot:", error);
+        alert("Failed to copy plot due to an unexpected error.");
+      }
     }
   };
 
   const handleApplyColors = () => {
-    // Removed redundant setColors([...colors]);
-    setIsColorPanelOpen(false); 
-  };  
-
-  const savePlot = async () => {
-    if (!Plotly || !plotRef.current) {
-      alert("Plotly or plot reference not available.");
-      return;
-    }
-  
-    const plotElement = plotRef.current as unknown as ExtendedPlotlyHTMLElement;
-    const originalLayout = plotElement.layout || {};
-  
-    try {
-      const exportLayout = getExportLayout(originalLayout, source);
-      await Plotly.update(plotRef.current, {}, exportLayout);
-  
-      await Plotly.downloadImage(plotRef.current, {
-        format: "png",
-        width: 1600,
-        height: 1200,
-        filename: "plot",
-      });
-    } catch (error) {
-      console.error("Failed to save plot:", error);
-      alert("Failed to save plot. Please try again.");
-    } finally {
-      await Plotly.relayout(plotRef.current, originalLayout);
-    }
-  };  
+    setIsColorPanelOpen(false);
+  };
 
   return (
     <header className="bg-panel text-white h-32 flex items-center p-6 shadow-lg relative">
       <div className="text-3xl font-semibold mr-auto">Dashboard</div>
 
       <div className="flex flex-grow justify-around items-center gap-4">
+        {/* Save Plot Button (PNG/JPEG using Kaleido) */}
+        <div
+          className={`flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors ${
+            isSaving ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={isSaving ? undefined : () => savePlotWithKaleido("png")}
+        >
+          {isSaving ? (
+            <span className="loader h-8 w-8 mb-2"></span>
+          ) : (
+            <AiOutlineSave className="h-8 w-8 text-borderBlue mb-2" />
+          )}
+          <span className="text-sm text-center">Save</span>
+        </div>
+
+        {/* Copy Plot Button (PNG using Kaleido) */}
         <div
           className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
-          onClick={copyPlot}
+          onClick={copyPlotWithKaleido}
         >
           <AiOutlineCopy className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Copy</span>
         </div>
 
-        <div
-          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
-          onClick={savePlot}
-        >
-          <AiOutlineSave className="h-8 w-8 text-borderBlue mb-2" />
-          <span className="text-sm text-center">Save</span>
-        </div>
-
+        {/* Add Logo Button */}
         <div
           className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
           onClick={toggleLogoPanel}
@@ -196,11 +283,13 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
           <span className="text-sm text-center">Add Logo</span>
         </div>
 
+        {/* Change Theme Button */}
         <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
           <FiSettings className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Change Theme</span>
         </div>
 
+        {/* Customize Colors Button */}
         <div
           className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
           onClick={toggleColorPanel}
@@ -209,17 +298,29 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
           <span className="text-sm text-center">Customize Colors</span>
         </div>
 
+        {/* Sign In Button */}
         <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
           <FiLogIn className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Sign In</span>
         </div>
 
+        {/* Upgrade Button */}
         <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
           <FiStar className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Upgrade</span>
         </div>
+
+        {/* Download SVG Button (using Kaleido) */}
+        <div
+          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
+          onClick={() => savePlotWithKaleido("svg")}
+        >
+          <FiDownload className="h-8 w-8 text-borderBlue mb-2" />
+          <span className="text-sm text-center">Download SVG</span>
+        </div>
       </div>
 
+      {/* Profile Section */}
       <div className="ml-6 relative">
         <button
           onClick={toggleProfilePopup}
@@ -247,6 +348,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
           </div>
         )}
 
+        {/* Color Panel Modal */}
         {isColorPanelOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="relative bg-white text-black rounded-lg shadow-lg p-8 w-[80%] h-[80%]">
@@ -280,7 +382,9 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
                     <div className="w-full flex justify-center">
                       <SketchPicker
                         color={color}
-                        onChangeComplete={(newColor) => updateColor(index, newColor.hex)}
+                        onChangeComplete={(newColor) =>
+                          updateColor(index, newColor.hex)
+                        }
                         disableAlpha
                       />
                     </div>
@@ -300,6 +404,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
           </div>
         )}
 
+        {/* Logo Panel Modal */}
         {isLogoPanelOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="relative bg-white text-black rounded-lg shadow-lg p-8 w-[80%] max-w-md">
@@ -312,7 +417,10 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
 
               <h3 className="text-xl font-semibold mb-6">Update Logo</h3>
               <div className="mb-4">
-                <label htmlFor="logo-url" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="logo-url"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Logo URL:
                 </label>
                 <input

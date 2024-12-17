@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals.push("plotly.js-dist-min"); // Replace with any other client-only library
+      config.externals.push('puppeteer-core');
+      config.externals.push('chrome-aws-lambda');
     }
     return config;
   },
