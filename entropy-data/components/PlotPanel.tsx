@@ -45,10 +45,6 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
               type: "bar",
               name: label,
               marker: { color: colors[index % colors.length] },
-              line: {
-                width: 3,
-                color: colors[index % colors.length], 
-              },
             };
           });
         } else if (customization.chartType === "bar-line") {

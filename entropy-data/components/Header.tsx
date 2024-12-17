@@ -78,12 +78,10 @@ const Header: React.FC<HeaderProps> = ({
 
     type Title = string | { text?: string; font?: Partial<Plotly.Font> };
   
-    // Helper function to scale font sizes
     const scaleFont = (font?: Partial<Plotly.Font>) => {
       if (font && font.size) font.size = font.size * scaleFactor;
     };
   
-    // Normalize title into an object with text and font
     const normalizeTitle = (title: Title, defaultText: string) => {
       if (typeof title === "string") {
         return { text: title || defaultText, font: { size: 14, color: "white" } };
@@ -95,13 +93,11 @@ const Header: React.FC<HeaderProps> = ({
       }
     };
   
-    // Apply normalization and scaling for titles
     const xTitle = normalizeTitle(originalLayout.xaxis?.title || "", "Date");
     const yTitle = normalizeTitle(originalLayout.yaxis?.title || "", "Value");
     const y2Title = normalizeTitle(originalLayout.yaxis2?.title || "", "Value (Right)");
     const mainTitle = normalizeTitle(originalLayout.title || "", "Main Title");
   
-    // Scale fonts
     scaleFont(mainTitle.font);
     scaleFont(xTitle.font);
     scaleFont(yTitle.font);
@@ -123,6 +119,7 @@ const Header: React.FC<HeaderProps> = ({
         tickfont: { size: 14 * scaleFactor, color: "white" },
         showgrid: false,
         linecolor: "white",
+        rangeslider: { visible: false },
       },
       yaxis: {
         ...(originalLayout.yaxis || {}),
