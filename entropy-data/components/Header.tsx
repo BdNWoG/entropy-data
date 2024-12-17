@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { AiOutlineCopy, AiOutlineSave, AiOutlinePicture } from "react-icons/ai";
-import { FiSettings, FiLogIn, FiStar, FiDownload } from "react-icons/fi";
+import { FiSettings, FiLogIn, FiStar } from "react-icons/fi";
 import { MdColorLens } from "react-icons/md";
 import Image from "next/image";
 import { Layout, PlotlyHTMLElement } from "plotly.js";
@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
   const [isLogoPanelOpen, setIsLogoPanelOpen] = useState(false);
   const [newSourceImage, setNewSourceImage] = useState(sourceImage);
-  const [isSaving, setIsSaving] = useState(false); // Added loading state
+  const [isSaving, setIsSaving] = useState(false); // Loading state
 
   useEffect(() => {
     const loadPlotly = async () => {
@@ -73,37 +73,111 @@ const Header: React.FC<HeaderProps> = ({
     setIsLogoPanelOpen(false);
   };
 
-  const getExportLayout = (originalLayout: Partial<Layout>, source: string): Partial<Layout> => ({
-    ...originalLayout,
-    annotations: [
-      {
-        text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
-        font: { size: 14, color: "white" },
-        showarrow: false,
-        xref: "paper",
-        yref: "paper",
-        x: 0.99,
-        y: -0.1,
-        xanchor: "right",
-        yanchor: "bottom",
-        bgcolor: "#1f2c56",
-        bordercolor: "white",
-        borderwidth: 1,
-        borderpad: 6,
-      },
-    ],
-    showlegend: true,
-    legend: {
-      orientation: "h",
-      yanchor: "top",
-      y: -0.1,
-      xanchor: "center",
-      x: 0.5,
-      font: { size: 13, color: "white" },
-    },
-  });
+  const getExportLayout = (originalLayout: Partial<Layout>, source: string): Partial<Layout> => {
+    const scaleFactor = 2.0; // Scale factor for everything
 
-  const savePlotWithKaleido = async (format: "png" | "jpeg" | "svg") => {
+    type Title = string | { text?: string; font?: Partial<Plotly.Font> };
+  
+    // Helper function to scale font sizes
+    const scaleFont = (font?: Partial<Plotly.Font>) => {
+      if (font && font.size) font.size = font.size * scaleFactor;
+    };
+  
+    // Normalize title into an object with text and font
+    const normalizeTitle = (title: Title, defaultText: string) => {
+      if (typeof title === "string") {
+        return { text: title || defaultText, font: { size: 14, color: "white" } };
+      } else {
+        return {
+          text: title?.text || defaultText,
+          font: { ...title?.font, size: (title?.font?.size || 14), color: "white" },
+        };
+      }
+    };
+  
+    // Apply normalization and scaling for titles
+    const xTitle = normalizeTitle(originalLayout.xaxis?.title || "", "Date");
+    const yTitle = normalizeTitle(originalLayout.yaxis?.title || "", "Value");
+    const y2Title = normalizeTitle(originalLayout.yaxis2?.title || "", "Value (Right)");
+    const mainTitle = normalizeTitle(originalLayout.title || "", "Main Title");
+  
+    // Scale fonts
+    scaleFont(mainTitle.font);
+    scaleFont(xTitle.font);
+    scaleFont(yTitle.font);
+    scaleFont(y2Title.font);
+  
+    const layout: Partial<Layout> = {
+      title: {
+        text: mainTitle.text,
+        font: mainTitle.font,
+        xanchor: "center",
+        x: 0.5, // Center the title
+      },
+      plot_bgcolor: "#030d1c",
+      paper_bgcolor: "#030d1c",
+      font: { size: 14 * scaleFactor, color: "white" },
+      xaxis: {
+        ...(originalLayout.xaxis || {}),
+        title: xTitle,
+        tickfont: { size: 14 * scaleFactor, color: "white" },
+        showgrid: false,
+        linecolor: "white",
+      },
+      yaxis: {
+        ...(originalLayout.yaxis || {}),
+        title: yTitle,
+        tickfont: { size: 14 * scaleFactor, color: "white" },
+        showgrid: true,
+        gridcolor: "rgba(173, 176, 181, 0.6)",
+        linecolor: "white",
+      },
+      yaxis2: {
+        ...(originalLayout.yaxis2 || {}),
+        overlaying: "y",
+        side: "right",
+        title: y2Title,
+        tickfont: { size: 14 * scaleFactor, color: "white" },
+        showgrid: false,
+        linecolor: "white",
+      },
+      legend: {
+        orientation: "h",
+        yanchor: "top",
+        y: -0.1,
+        xanchor: "center",
+        x: 0.5,
+        font: { size: 14 * scaleFactor, color: "white" },
+      },
+      annotations: [
+        {
+          text: `<b>${source}</b> <br>Date: ${new Date().toLocaleDateString()}`,
+          font: { size: 13 * scaleFactor, color: "white" },
+          showarrow: false,
+          xref: "paper",
+          yref: "paper",
+          x: 0.99,
+          y: -0.15,
+          xanchor: "right",
+          yanchor: "bottom",
+          bgcolor: "#1f2c56",
+          bordercolor: "white",
+          borderwidth: 1,
+          borderpad: 4,
+        },
+      ],
+      margin: {
+        l: 100 * scaleFactor,
+        r: 100 * scaleFactor,
+        t: 100 * scaleFactor,
+        b: 100 * scaleFactor,
+      },
+    };
+  
+    return layout;
+  };  
+
+  const savePlotWithKaleido = async (format: "png" | "jpeg") => {
     if (!Plotly || !plotRef.current) {
       alert("Plotly or plot reference not available.");
       return;
@@ -116,7 +190,6 @@ const Header: React.FC<HeaderProps> = ({
       const originalLayout = plotElement.layout || {};
       const exportLayout = getExportLayout(originalLayout, source);
 
-      // Construct the figure JSON that Kaleido can use
       const plotData = plotElement.data;
       const layout = exportLayout;
 
@@ -125,7 +198,6 @@ const Header: React.FC<HeaderProps> = ({
       const height = 1600;
       const scale = 3;
 
-      // Make POST request to the Kaleido export endpoint (needs to be implemented server-side)
       const response = await fetch("/api/kaleidoExport", {
         method: "POST",
         headers: {
@@ -142,7 +214,7 @@ const Header: React.FC<HeaderProps> = ({
       });
 
       if (!response.ok) {
-        let errorMessage = `Failed to export plot${format === 'svg' ? ' as SVG' : ''}`;
+        let errorMessage = `Failed to export plot`;
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
@@ -156,7 +228,7 @@ const Header: React.FC<HeaderProps> = ({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = format === "svg" ? "plot_high_res.svg" : "plot_high_res.png";
+      link.download = format === "jpeg" ? "plot_high_res.jpg" : "plot_high_res.png";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -250,7 +322,7 @@ const Header: React.FC<HeaderProps> = ({
       <div className="text-3xl font-semibold mr-auto">Dashboard</div>
 
       <div className="flex flex-grow justify-around items-center gap-4">
-        {/* Save Plot Button (PNG/JPEG using Kaleido) */}
+        {/* Save Plot Button (PNG by default) */}
         <div
           className={`flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors ${
             isSaving ? "opacity-50 cursor-not-allowed" : ""
@@ -265,7 +337,7 @@ const Header: React.FC<HeaderProps> = ({
           <span className="text-sm text-center">Save</span>
         </div>
 
-        {/* Copy Plot Button (PNG using Kaleido) */}
+        {/* Copy Plot Button (PNG) */}
         <div
           className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
           onClick={copyPlotWithKaleido}
@@ -310,14 +382,7 @@ const Header: React.FC<HeaderProps> = ({
           <span className="text-sm text-center">Upgrade</span>
         </div>
 
-        {/* Download SVG Button (using Kaleido) */}
-        <div
-          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
-          onClick={() => savePlotWithKaleido("svg")}
-        >
-          <FiDownload className="h-8 w-8 text-borderBlue mb-2" />
-          <span className="text-sm text-center">Download SVG</span>
-        </div>
+        {/* Removed the Download SVG button as requested */}
       </div>
 
       {/* Profile Section */}
@@ -382,9 +447,7 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="w-full flex justify-center">
                       <SketchPicker
                         color={color}
-                        onChangeComplete={(newColor) =>
-                          updateColor(index, newColor.hex)
-                        }
+                        onChangeComplete={(newColor) => updateColor(index, newColor.hex)}
                         disableAlpha
                       />
                     </div>
