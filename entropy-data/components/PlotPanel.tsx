@@ -28,16 +28,22 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
         if (customization.chartType === "100%") {
           const summedValues: number[] = plotData[Object.keys(plotData)[0]].timestamp.map(
             (_, idx) =>
-              Object.values(plotData).reduce(
-                (sum, { value }) => sum + (value[idx] || 0),
-                0
-              )
+              Object.values(plotData).reduce((sum, { value }) => sum + (value[idx] || 0), 0)
           );
-
+          
           traces = Object.entries(plotData).map(([label, { timestamp, value }], index) => {
-            const normalizedY = value.map((v, idx) =>
+            let normalizedY = value.map((v, idx) =>
               summedValues[idx] === 0 ? 0 : (v / summedValues[idx]) * 100
             );
+          
+            normalizedY = normalizedY.map((y) => parseFloat(y.toFixed(6)));
+          
+            normalizedY = normalizedY.map((y, idx, arr) => {
+              const total = arr.reduce((sum, val) => sum + val, 0); // Sum the current normalized values
+              const correction = 100 - total; // Calculate the correction required
+              const correctedValue = y + correction / arr.length; // Redistribute correction proportionally
+              return parseFloat(correctedValue.toFixed(6)); // Round to 6 decimal places
+            });
 
             return {
               x: timestamp,
