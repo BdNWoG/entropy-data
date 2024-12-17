@@ -22,23 +22,23 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const targetDateFormat = "yyyy-MM-dd"; // Fixed date format
 
   const dateFormats = [
-    "yyyy-MM-dd",                     // ISO date
-    "MM/dd/yyyy",                     // U.S. date
-    "dd-MM-yyyy",                     // European date
-    "dd/MM/yyyy",                     // Another European format
-    "MMM dd, yyyy",                   // Abbreviated month
-    "MMMM dd, yyyy",                  // Full month name
-    "yyyy/MM/dd",                     // Alternate ISO format
-    "MM-dd-yyyy",                     // Dashes with U.S. style
-    "yyyy-MM-dd HH:mm:ss",            // ISO with time
-    "MM/dd/yyyy HH:mm:ss",            // U.S. with time
-    "dd-MM-yyyy HH:mm:ss",            // European with time
-    "yyyyMMdd",                       // Compact format
-    "dd MMM yyyy",                    // Day Month Year
-    "MMM dd, yyyy h:mm a",            // 12-hour time
-    "yyyy-MM-dd'T'HH:mm:ss",          // ISO 8601 with T
-    "yyyy-MM-dd HH:mm:ss.SSS",        // ISO with milliseconds
-    "M/d/yy",                         // Short U.S. date (e.g., 1/1/23)
+    "yyyy-MM-dd",
+    "MM/dd/yyyy",
+    "dd-MM-yyyy",
+    "dd/MM/yyyy",
+    "MMM dd, yyyy",
+    "MMMM dd, yyyy",
+    "yyyy/MM/dd",
+    "MM-dd-yyyy",
+    "yyyy-MM-dd HH:mm:ss",
+    "MM/dd/yyyy HH:mm:ss",
+    "dd-MM-yyyy HH:mm:ss",
+    "yyyyMMdd",
+    "dd MMM yyyy",
+    "MMM dd, yyyy h:mm a",
+    "yyyy-MM-dd'T'HH:mm:ss",
+    "yyyy-MM-dd HH:mm:ss.SSS",
+    "M/d/yy",
   ];
 
   useEffect(() => {
@@ -61,35 +61,35 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
 
   const sortAndGroupByDate = (data: string[][]): string[][] => {
     if (data.length < 2) return data; // No sorting needed for empty or header-only data
-  
+
     const header = data[0];
     const body = data.slice(1);
-  
+
     // Standardize dates and group rows by date
     const groupedData: Record<string, number[]> = {};
-  
+
     body.forEach((row) => {
       const date = standardizeDate(row[0]); // Standardized date
       if (!date) return; // Skip rows with invalid dates
-  
+
       if (!groupedData[date]) {
         groupedData[date] = new Array(row.length - 1).fill(0); // Initialize an array to sum values
       }
-  
+
       row.slice(1).forEach((value, index) => {
         const numericValue = parseFloat(value) || 0; // Parse numeric values, default to 0
         groupedData[date][index] += numericValue; // Sum up values
       });
     });
-  
+
     // Convert grouped data back into an array and sort by date
     const sortedGroupedData = Object.entries(groupedData)
       .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime()) // Sort by date
       .map(([date, values]) => [date, ...values.map((v) => v.toString())]); // Format back to strings
-  
+
     return [header, ...sortedGroupedData];
   };
-  
+
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -104,7 +104,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       });
     }
   };
-  
+
   const handleSortAndGroupByDate = () => {
     if (editableData) {
       const sortedAndGroupedData = sortAndGroupByDate(editableData);
@@ -117,13 +117,21 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       return "";
     }
 
+    // Remove ' UTC' if present
     const adjustedDate = date.includes("UTC") ? date.replace(" UTC", "") : date;
 
     for (const formatString of dateFormats) {
       try {
         const parsedDate = parse(adjustedDate, formatString, new Date());
+
         if (!isNaN(parsedDate.getTime())) {
-          return format(parsedDate, targetDateFormat); // Immediately return the formatted date
+          // Check if the year is a two-digit year
+          const year = parsedDate.getFullYear();
+          if (year < 100) {
+            // Adjust two-digit year to 20xx
+            parsedDate.setFullYear(year + 2000);
+          }
+          return format(parsedDate, targetDateFormat); // Return the formatted date
         }
       } catch {
         // Ignore and try the next format
@@ -131,7 +139,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       }
     }
 
-    return date;
+    return date; // Return the original date if no format matched
   };
 
   const handleEditCell = (rowIndex: number, cellIndex: number, value: string) => {
@@ -338,33 +346,33 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
           >
             <div className="overflow-x-auto h-full">
               <table className="min-w-max table-auto border-collapse">
-              <thead>
-                <tr>
-                  {editableData?.[0].map((header, columnIndex) => (
-                    <th
-                      key={columnIndex}
-                      className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group"
-                      draggable
-                      onDragStart={() => handleDragStart(columnIndex, "column")}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => handleDrop(columnIndex)}
-                    >
-                      <input
-                        type="text"
-                        value={header}
-                        onChange={(e) => handleEditCell(0, columnIndex, e.target.value)}
-                        className="bg-transparent text-white w-full text-center"
-                      />
-                      <button
-                        className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                        onClick={() => handleDeleteColumn(columnIndex)} // Pass the column index here
+                <thead>
+                  <tr>
+                    {editableData?.[0].map((header, columnIndex) => (
+                      <th
+                        key={columnIndex}
+                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group"
+                        draggable
+                        onDragStart={() => handleDragStart(columnIndex, "column")}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => handleDrop(columnIndex)}
                       >
-                        ✕
-                      </button>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+                        <input
+                          type="text"
+                          value={header}
+                          onChange={(e) => handleEditCell(0, columnIndex, e.target.value)}
+                          className="bg-transparent text-white w-full text-center"
+                        />
+                        <button
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
+                          onClick={() => handleDeleteColumn(columnIndex)} // Pass the column index here
+                        >
+                          ✕
+                        </button>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
                 <tbody>
                   {editableData?.slice(1).map((row, rowIndex) => (
                     <tr

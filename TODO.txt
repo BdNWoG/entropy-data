@@ -1,7 +1,4 @@
 TODO:
 
-Not stacked bar and line
-
-destructure
-
-legends bunched up
+Saving Pics
+Date config - auto 21st century
