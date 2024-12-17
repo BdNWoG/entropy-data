@@ -163,6 +163,21 @@ const Header: React.FC<HeaderProps> = ({
           borderpad: 4,
         },
       ],
+      images: [
+        {
+          source: sourceImage,
+          xref: "paper",
+          yref: "paper",
+          x: 0.5,
+          y: 0.5,
+          sizex: 0.3,
+          sizey: 0.3,
+          xanchor: "center",
+          yanchor: "middle",
+          opacity: 0.25,
+          layer: "above",
+        },
+      ],
       margin: {
         l: 100 * scaleFactor,
         r: 100 * scaleFactor,

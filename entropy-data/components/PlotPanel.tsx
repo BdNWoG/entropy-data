@@ -32,22 +32,25 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
           );
           
           traces = Object.entries(plotData).map(([label, { timestamp, value }], index) => {
-            let normalizedY = value.map((v, idx) =>
+            const normalizedY = value.map((v, idx) => 
               summedValues[idx] === 0 ? 0 : (v / summedValues[idx]) * 100
             );
           
-            normalizedY = normalizedY.map((y) => parseFloat(y.toFixed(6)));
+            const roundedY = normalizedY.map((y) => parseFloat(y.toFixed(6)));
           
-            normalizedY = normalizedY.map((y, idx, arr) => {
-              const total = arr.reduce((sum, val) => sum + val, 0); // Sum the current normalized values
-              const correction = 100 - total; // Calculate the correction required
-              const correctedValue = y + correction / arr.length; // Redistribute correction proportionally
-              return parseFloat(correctedValue.toFixed(6)); // Round to 6 decimal places
+            const correctedY = roundedY.map((y, idx, arr) => {
+              const total = arr.reduce((sum, val) => sum + val, 0);
+              const correction = 100 - total;
+          
+              if (idx === arr.findLastIndex((val) => val !== 0)) {
+                return parseFloat((y + correction).toFixed(6));
+              }
+              return y;
             });
 
             return {
               x: timestamp,
-              y: normalizedY,
+              y: correctedY,
               type: "bar",
               name: label,
               marker: { color: colors[index % colors.length] },
