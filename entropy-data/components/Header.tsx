@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { AiOutlineCopy, AiOutlineSave, AiOutlinePicture } from "react-icons/ai";
 import { FiSettings, FiLogIn, FiStar } from "react-icons/fi";
@@ -15,7 +17,6 @@ interface HeaderProps {
   setSourceImage: (image: string) => void;
 }
 
-// Custom type for Extended Plotly HTMLElement
 type ExtendedPlotlyHTMLElement = PlotlyHTMLElement & {
   layout: Partial<Layout> & { annotations?: Array<Partial<Plotly.Annotations>> };
 };
@@ -134,6 +135,11 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
     }
   };
 
+  const handleApplyColors = () => {
+    // Removed redundant setColors([...colors]);
+    setIsColorPanelOpen(false); 
+  };  
+
   const savePlot = async () => {
     if (!Plotly || !plotRef.current) {
       alert("Plotly or plot reference not available.");
@@ -182,8 +188,10 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
           <span className="text-sm text-center">Save</span>
         </div>
 
-        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
-        onClick={toggleLogoPanel}>
+        <div
+          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
+          onClick={toggleLogoPanel}
+        >
           <AiOutlinePicture className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Add Logo</span>
         </div>
@@ -193,8 +201,10 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
           <span className="text-sm text-center">Change Theme</span>
         </div>
 
-        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
-          onClick={toggleColorPanel}>
+        <div
+          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors"
+          onClick={toggleColorPanel}
+        >
           <MdColorLens className="h-8 w-8 text-borderBlue mb-2" />
           <span className="text-sm text-center">Customize Colors</span>
         </div>
@@ -280,9 +290,7 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
 
               <div className="mt-4 flex justify-center">
                 <button
-                  onClick={() => {
-                    setIsColorPanelOpen(false);
-                  }}
+                  onClick={handleApplyColors}
                   className="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition"
                 >
                   Apply Changes
@@ -295,7 +303,6 @@ const Header: React.FC<HeaderProps> = ({ plotRef, source, colors, setColors, sou
         {isLogoPanelOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="relative bg-white text-black rounded-lg shadow-lg p-8 w-[80%] max-w-md">
-              {/* Close Button */}
               <button
                 onClick={toggleLogoPanel}
                 className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold"

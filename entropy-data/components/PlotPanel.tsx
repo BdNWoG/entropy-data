@@ -21,6 +21,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
   useEffect(() => {
     if (typeof window !== "undefined" && plotData && internalPlotRef.current) {
       import("plotly.js-dist-min").then((Plotly) => {
+        console.log("PlotPanel useEffect triggered with colors:", colors); // Debugging
+
         let traces: Data[] = [];
 
         if (customization.chartType === "100%") {
@@ -42,10 +44,10 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
               y: normalizedY,
               type: "bar",
               name: label,
-              marker: { color: colors[index % colors.length]  },
+              marker: { color: colors[index % colors.length] },
               line: {
                 width: 3,
-                color: colors[index % colors.length], // Line color
+                color: colors[index % colors.length], 
               },
             };
           });
@@ -63,8 +65,8 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
               mode: isLast ? "lines" : undefined,
               name: label,
               yaxis: isLast ? "y2" : "y",
-              marker: { color: getColor(index) },
-              line: isLast ? { width: 3, color: getColor(index) } : undefined,
+              marker: { color: getColor(index, colors) },
+              line: isLast ? { width: 3, color: getColor(index, colors) } : undefined,
             };
           });
         } else {
@@ -82,14 +84,14 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
               customization.stacked && customization.chartType === "line"
                 ? "one"
                 : undefined,
-            marker: { color: getColor(index) },
+            marker: { color: getColor(index, colors) },
             line:
               customization.chartType === "line"
-                ? { width: 3, color: getColor(index) }
+                ? { width: 3, color: getColor(index, colors) }
                 : undefined,
             fillcolor:
               customization.chartType === "line" && customization.fill
-                ? getFillColor(index)
+                ? getFillColor(index, colors)
                 : undefined,
           }));
         }
@@ -181,7 +183,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
           annotations: [
             {
               text: `${customization.source} <br>Date: ${new Date().toLocaleDateString()}`,
-              font: { size: 8, color: "white" },
+              font: { size: 13, color: "white" },
               showarrow: false,
               xref: "paper",
               yref: "paper",
@@ -199,7 +201,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
 
         if (internalPlotRef.current) {
           Plotly.purge(internalPlotRef.current);
-          Plotly.newPlot(internalPlotRef.current, traces, layout);
+          Plotly.react(internalPlotRef.current, traces, layout);
         }
       });
     } else if (plotData === null && internalPlotRef.current) {
@@ -210,7 +212,7 @@ const PlotPanel: React.FC<PlotPanelProps> = ({ plotData, customization, plotRef,
         }
       });
     }
-  }, [plotData, customization]);
+  }, [plotData, customization, colors, sourceImage]);
 
   return (
     <div className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border">
