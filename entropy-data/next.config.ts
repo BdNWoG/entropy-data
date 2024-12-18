@@ -14,7 +14,13 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'i.imgur.com',
         port: '',
-        pathname: '/**', // Allow all paths under i.imgur.com
+        pathname: '/**', 
+      },
+      {
+        protocol: 'https',
+        hostname: "lh3.googleusercontent.com",
+        port: '',
+        pathname: '/**', 
       },
     ],
   },

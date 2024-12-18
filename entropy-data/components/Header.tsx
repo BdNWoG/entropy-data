@@ -7,6 +7,7 @@ import { MdColorLens } from "react-icons/md";
 import Image from "next/image";
 import { Layout, PlotlyHTMLElement } from "plotly.js";
 import { SketchPicker } from "react-color";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 interface HeaderProps {
   plotRef: React.RefObject<HTMLDivElement>;
@@ -29,6 +30,7 @@ const Header: React.FC<HeaderProps> = ({
   sourceImage,
   setSourceImage,
 }) => {
+  const { data: session } = useSession();
   const [Plotly, setPlotly] = useState<typeof import("plotly.js-dist-min") | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
@@ -383,47 +385,78 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Sign In Button */}
-        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
-          <FiLogIn className="h-8 w-8 text-borderBlue mb-2" />
-          <span className="text-sm text-center">Sign In</span>
+        <div
+          className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
+          onClick={() => {
+            if (session) {
+              toggleProfilePopup();
+            } else {
+              signIn("google");
+            }
+          }}
+        >
+          {session && session.user?.image ? (
+            <Image
+              src={session.user.image}
+              alt="Profile"
+              width={32}
+              height={32}
+              className="rounded-full h-8 w-8 mb-2"
+            />
+          ) : (
+            <FiLogIn className="h-8 w-8 text-borderBlue mb-2" />
+          )}
+          <span className="text-sm text-center">
+            {session ? "Profile" : "Sign In"}
+          </span>
         </div>
 
         {/* Upgrade Button */}
-        <div className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors">
-          <FiStar className="h-8 w-8 text-borderBlue mb-2" />
-          <span className="text-sm text-center">Upgrade</span>
-        </div>
-
-        {/* Removed the Download SVG button as requested */}
+        {session && (
+          <div
+            className="flex flex-col items-center justify-center border-2 border-borderBlue rounded-lg w-28 h-28 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
+            onClick={() => {
+              // Handle upgrade logic here
+              // For example, navigate to a premium signup page
+              window.location.href = "/upgrade"; // Replace with your upgrade route
+            }}
+          >
+            <FiStar className="h-8 w-8 text-borderBlue mb-2" />
+            <span className="text-sm text-center">Upgrade</span>
+          </div>
+        )}
       </div>
 
       {/* Profile Section */}
-      <div className="ml-6 relative">
-        <button
-          onClick={toggleProfilePopup}
-          className="w-16 h-16 rounded-full overflow-hidden border-2 border-white focus:outline-none focus:ring-2 focus:ring-blue-400 hover:scale-105 transition-transform"
-        >
-          <Image
-            src="https://via.placeholder.com/150"
-            alt="Profile"
-            width={150}
-            height={150}
-            className="w-full h-full object-cover"
-          />
-        </button>
-
-        {isProfileOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg p-4 z-50">
-            <p className="text-lg font-semibold mb-2">John Doe</p>
-            <p className="text-sm mb-4">johndoe@example.com</p>
-            <button
-              className="w-full bg-blue-500 text-white py-1 rounded-md hover:bg-blue-600 transition"
-              onClick={() => alert("Logging out...")}
-            >
-              Log Out
-            </button>
+      {session && isProfileOpen && (
+        <div className="absolute right-6 top-20 w-64 bg-white text-black rounded-lg shadow-lg p-4 z-50">
+          <div className="flex items-center mb-4">
+            <Image
+              src={session.user.image || "https://via.placeholder.com/150"}
+              alt="Profile"
+              width={50}
+              height={50}
+              className="rounded-full"
+            />
+            <div className="ml-4">
+              <p className="text-lg font-semibold">{session.user.name}</p>
+              <p className="text-sm text-gray-600">{session.user.email}</p>
+              <p className="text-sm text-gray-600 capitalize">
+                Tier: {session.user.tier}
+              </p>
+            </div>
           </div>
-        )}
+          <button
+            className="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600 transition"
+            onClick={() => {
+              signOut();
+              setIsProfileOpen(false);
+            }}
+          >
+            Log Out
+          </button>
+        </div>
+      )}
 
         {/* Color Panel Modal */}
         {isColorPanelOpen && (
@@ -529,7 +562,6 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
         )}
-      </div>
     </header>
   );
 };
