@@ -143,7 +143,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
           setView("table");
           closeApiModal();
         },
-        error: (err) => {
+        error: (err: unknown) => {
           console.error(err);
           alert("Failed to parse CSV.");
         },
