@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
-import { parse, format } from "date-fns"; // For date parsing and formatting
+import { parse, format } from "date-fns";
 import { PlotData } from "./types";
 
 interface CSVPanelProps {
@@ -10,406 +10,248 @@ interface CSVPanelProps {
 }
 
 const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
+  // ────────────────────────────────────────────────
+  // state & refs
+  // ────────────────────────────────────────────────
   const [editableData, setEditableData] = useState<string[][] | null>(null);
   const [tableHeight, setTableHeight] = useState<number>(0);
   const [view, setView] = useState<"initial" | "table">("initial");
+
+  // drag‑and‑drop
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggingType, setDraggingType] = useState<"row" | "column" | null>(null);
+
+  // API import modal
+  const [isApiModalOpen, setIsApiModalOpen] = useState(false);
+  const [apiInput, setApiInput] = useState("");
+  const [duneQueryId, setDuneQueryId] = useState<string | null>(null); // stores the textbox value
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
 
-  const targetDateFormat = "yyyy-MM-dd"; // Fixed date format
-
+  // ────────────────────────────────────────────────
+  // date helpers
+  // ────────────────────────────────────────────────
+  const targetDateFormat = "yyyy-MM-dd";
   const dateFormats = [
-    "yyyy-MM-dd",
-    "MM/dd/yyyy",
-    "dd-MM-yyyy",
-    "dd/MM/yyyy",
-    "MMM dd, yyyy",
-    "MMMM dd, yyyy",
-    "yyyy/MM/dd",
-    "MM-dd-yyyy",
-    "yyyy-MM-dd HH:mm:ss",
-    "MM/dd/yyyy HH:mm:ss",
-    "dd-MM-yyyy HH:mm:ss",
-    "yyyyMMdd",
-    "dd MMM yyyy",
-    "MMM dd, yyyy h:mm a",
-    "yyyy-MM-dd'T'HH:mm:ss",
-    "yyyy-MM-dd HH:mm:ss.SSS",
-    "M/d/yy",
+    "yyyy-MM-dd","MM/dd/yyyy","dd-MM-yyyy","dd/MM/yyyy","MMM dd, yyyy","MMMM dd, yyyy","yyyy/MM/dd","MM-dd-yyyy","yyyy-MM-dd HH:mm:ss","MM/dd/yyyy HH:mm:ss","dd-MM-yyyy HH:mm:ss","yyyyMMdd","dd MMM yyyy","MMM dd, yyyy h:mm a","yyyy-MM-dd'T'HH:mm:ss","yyyy-MM-dd HH:mm:ss.SSS","M/d/yy",
   ];
 
+  // ────────────────────────────────────────────────
+  // size calculations
+  // ────────────────────────────────────────────────
   useEffect(() => {
     const updateTableHeight = () => {
       if (containerRef.current && buttonRowRef.current) {
         const containerHeight = containerRef.current.clientHeight;
         const buttonRowHeight = buttonRowRef.current.clientHeight;
         const padding = 30;
-        setTableHeight(containerHeight - buttonRowHeight - padding * 1000);
+        setTableHeight(containerHeight - buttonRowHeight - padding);
       }
     };
-
     updateTableHeight();
     window.addEventListener("resize", updateTableHeight);
-
-    return () => {
-      window.removeEventListener("resize", updateTableHeight);
-    };
+    return () => window.removeEventListener("resize", updateTableHeight);
   }, []);
 
-  const sortAndGroupByDate = (data: string[][]): string[][] => {
-    if (data.length < 2) return data; // No sorting needed for empty or header-only data
+  // ────────────────────────────────────────────────
+  // CSV helpers
+  // ────────────────────────────────────────────────
+  const standardizeDate = (date: string | undefined | null): string => {
+    if (!date || typeof date !== "string") return "";
+    const adjusted = date.includes("UTC") ? date.replace(" UTC", "") : date;
+    for (const fmt of dateFormats) {
+      try {
+        const parsed = parse(adjusted, fmt, new Date());
+        if (!isNaN(parsed.getTime())) {
+          if (parsed.getFullYear() < 100) parsed.setFullYear(parsed.getFullYear() + 2000);
+          return format(parsed, targetDateFormat);
+        }
+      } catch { /* continue */ }
+    }
+    return date;
+  };
 
+  const sortAndGroupByDate = (data: string[][]): string[][] => {
+    if (data.length < 2) return data;
     const header = data[0];
     const body = data.slice(1);
-
-    // Standardize dates and group rows by date
-    const groupedData: Record<string, number[]> = {};
-
+    const grouped: Record<string, number[]> = {};
     body.forEach((row) => {
-      const date = standardizeDate(row[0]); // Standardized date
-      if (!date) return; // Skip rows with invalid dates
-
-      if (!groupedData[date]) {
-        groupedData[date] = new Array(row.length - 1).fill(0); // Initialize an array to sum values
-      }
-
-      row.slice(1).forEach((value, index) => {
-        const numericValue = parseFloat(value) || 0; // Parse numeric values, default to 0
-        groupedData[date][index] += numericValue; // Sum up values
-      });
+      const d = standardizeDate(row[0]);
+      if (!d) return;
+      if (!grouped[d]) grouped[d] = new Array(row.length - 1).fill(0);
+      row.slice(1).forEach((v, i) => grouped[d][i] += parseFloat(v) || 0);
     });
-
-    // Convert grouped data back into an array and sort by date
-    const sortedGroupedData = Object.entries(groupedData)
-      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime()) // Sort by date
-      .map(([date, values]) => [date, ...values.map((v) => v.toString())]); // Format back to strings
-
-    return [header, ...sortedGroupedData];
+    const sorted = Object.entries(grouped)
+      .sort(([a],[b])=>new Date(a).getTime()-new Date(b).getTime())
+      .map(([d,vals])=>[d,...vals.map(String)]);
+    return [header,...sorted];
   };
 
-  const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      Papa.parse(file, {
-        complete: (result) => {
-          let data = result.data as string[][]; // Parsed CSV data
-          data = sortAndGroupByDate(data); // Sort and group data by the first column (dates)
-          setEditableData(data);
-          setView("table");
-        },
-        error: (error) => console.error("Error parsing CSV:", error),
-      });
-    }
-  };
-
-  const handleSortAndGroupByDate = () => {
-    if (editableData) {
-      const sortedAndGroupedData = sortAndGroupByDate(editableData);
-      setEditableData(sortedAndGroupedData);
-    }
-  };
-
-  const standardizeDate = (date: string | undefined | null): string => {
-    if (!date || typeof date !== "string") {
-      return "";
-    }
-
-    // Remove ' UTC' if present
-    const adjustedDate = date.includes("UTC") ? date.replace(" UTC", "") : date;
-
-    for (const formatString of dateFormats) {
-      try {
-        const parsedDate = parse(adjustedDate, formatString, new Date());
-
-        if (!isNaN(parsedDate.getTime())) {
-          // Check if the year is a two-digit year
-          const year = parsedDate.getFullYear();
-          if (year < 100) {
-            // Adjust two-digit year to 20xx
-            parsedDate.setFullYear(year + 2000);
-          }
-          return format(parsedDate, targetDateFormat); // Return the formatted date
-        }
-      } catch {
-        // Ignore and try the next format
-        continue;
-      }
-    }
-
-    return date; // Return the original date if no format matched
-  };
-
-  const handleEditCell = (rowIndex: number, cellIndex: number, value: string) => {
-    setEditableData((prevData) => {
-      if (prevData) {
-        const updatedData = [...prevData];
-        updatedData[rowIndex][cellIndex] = cellIndex === 0 ? standardizeDate(value) : value;
-        return updatedData;
-      }
-      return prevData;
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    Papa.parse(file, {
+      complete: ({ data }) => {
+        const csv = sortAndGroupByDate(data as string[][]);
+        setEditableData(csv);
+        setView("table");
+      },
+      error: (err) => console.error(err),
     });
   };
 
-  const handleCancel = () => {
-    setEditableData(null);
-    setPlotData(null);
-    setView("initial");
-  };
+  // ────────────────────────────────────────────────
+  // API import workflow
+  // ────────────────────────────────────────────────
+  const openApiModal = () => setIsApiModalOpen(true);
+  const closeApiModal = () => { setIsApiModalOpen(false); setApiInput(""); };
 
-  const handleAddRow = () => {
-    if (editableData) {
-      const newRow = new Array(editableData[0].length).fill("");
-      setEditableData([...editableData, newRow]);
-    }
-  };
+  const handleApiConfirm = async () => {
+    const input = apiInput.trim();
+    if (!input) return alert("Textbox is empty");
 
-  const handleAddColumn = () => {
-    if (editableData) {
-      const updatedData = editableData.map((row) => [...row, ""]);
-      setEditableData(updatedData);
-    }
-  };
+    setDuneQueryId(input); // store in variable for reference
 
-  const handleDeleteRow = () => {
-    if (editableData && editableData.length > 1) {
-      const updatedData = editableData.slice(0, -1);
-      setEditableData(updatedData);
-    }
-  };
+    try {
+      let csvText = "";
 
-  const handleDeleteColumn = (columnIndex: number) => {
-    if (editableData && editableData[0].length > 1) {
-      const updatedData = editableData.map((row) => {
-        const newRow = [...row];
-        newRow.splice(columnIndex, 1); // Remove the specific column
-        return newRow;
-      });
-      setEditableData(updatedData);
-    }
-  };
-
-  const handleCreateCSV = () => {
-    const blankCSV = Array.from({ length: 3 }, () => new Array(3).fill(""));
-    setEditableData(blankCSV);
-    setView("table");
-  };
-
-  const handleReorderRows = (sourceIndex: number, targetIndex: number) => {
-    if (editableData) {
-      const updatedData = [...editableData];
-      const [movedRow] = updatedData.splice(sourceIndex, 1);
-      updatedData.splice(targetIndex, 0, movedRow);
-      setEditableData(updatedData);
-    }
-  };
-
-  const handleReorderColumns = (sourceIndex: number, targetIndex: number) => {
-    if (editableData) {
-      const updatedData = editableData.map((row) => {
-        const newRow = [...row];
-        const [movedCell] = newRow.splice(sourceIndex, 1);
-        newRow.splice(targetIndex, 0, movedCell);
-        return newRow;
-      });
-      setEditableData(updatedData);
-    }
-  };
-
-  const handleDragStart = (index: number, type: "row" | "column") => {
-    setDraggedIndex(index);
-    setDraggingType(type);
-  };
-
-  const handleDrop = (targetIndex: number) => {
-    if (draggedIndex !== null && draggingType) {
-      if (draggingType === "row") {
-        handleReorderRows(draggedIndex, targetIndex);
-      } else if (draggingType === "column") {
-        handleReorderColumns(draggedIndex, targetIndex);
+      // 1️⃣ raw CSV pasted
+      if (input.includes(",") || input.includes("\n")) {
+        csvText = input;
       }
-      setDraggedIndex(null);
-      setDraggingType(null);
-    }
-  };
-
-  const handleTransposeCSV = () => {
-    if (editableData) {
-      const transposedData = editableData[0].map((_, colIndex) =>
-        editableData.map((row) => row[colIndex])
-      );
-      setEditableData(transposedData);
-    }
-  };
-
-  useEffect(() => {
-    if (view === "initial") {
-      setPlotData(null);
-    }
-  }, [view, setPlotData]);
-
-  useEffect(() => {
-    if (editableData) {
-      const processCSVData = (data: string[][]) => {
-        if (!data || data.length < 2) return;
-
-        const xValues = data.slice(1).map((row) => standardizeDate(row[0])); // Process dates in the first column
-        const plotData: PlotData = {};
-
-        data[0].slice(1).forEach((header, columnIndex) => {
-          plotData[header] = {
-            timestamp: xValues,
-            value: data.slice(1).map((row) => parseFloat(row[columnIndex + 1] || "0")),
-          };
+      // 2️⃣ full URL to CSV
+      else if (input.startsWith("http")) {
+        const res = await fetch(input);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        csvText = await res.text();
+      }
+      // 3️⃣ assume it is a Dune query ID → call our backend to run the Python script
+      else {
+        const res = await fetch("/api/duneCsv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ queryId: input }),
         });
+        if (!res.ok) throw new Error(`Dune fetch failed (${res.status})`);
+        csvText = await res.text();
+      }
 
-        console.log("Updated plotData:", plotData); // Debug log to verify data
-        setPlotData(plotData);
-      };
-      processCSVData(editableData);
+      // parse & load
+      Papa.parse(csvText, {
+        complete: ({ data }) => {
+          const csv = sortAndGroupByDate(data as string[][]);
+          setEditableData(csv);
+          setView("table");
+          closeApiModal();
+        },
+        error: (err) => {
+          console.error(err);
+          alert("Failed to parse CSV.");
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Import failed – check console for details.");
     }
-  }, [editableData, setPlotData]);
+  };
 
+  // ────────────────────────────────────────────────
+  // Table manipulation helpers
+  // ────────────────────────────────────────────────
+  const handleAddRow = () => editableData && setEditableData([...editableData, new Array(editableData[0].length).fill("")]);
+  const handleAddColumn = () => editableData && setEditableData(editableData.map(r => [...r, ""]));
+  const handleDeleteRow = () => editableData && editableData.length>1 && setEditableData(editableData.slice(0,-1));
+  const handleDeleteColumn = (idx:number)=> editableData&&editableData[0].length>1 && setEditableData(editableData.map(r=>r.filter((_,i)=>i!==idx)));
+  const handleReorderRows = (src:number,tgt:number)=>editableData&&setEditableData(prev=>{const d=[...prev!];const [r]=d.splice(src,1);d.splice(tgt,0,r);return d});
+  const handleReorderCols = (src:number,tgt:number)=>editableData&&setEditableData(prev=>prev!.map(r=>{const row=[...r];const [c]=row.splice(src,1);row.splice(tgt,0,c);return row;}));
+  const handleTranspose = ()=>editableData&&setEditableData(editableData[0].map((_,c)=>editableData.map(r=>r[c])));
+  const handleCancel = ()=>{setEditableData(null);setPlotData(null);setView("initial");};
+    
+  const handleDragStart=(idx:number,type:"row"|"column")=>{setDraggedIndex(idx);setDraggingType(type);}  ;
+  const handleDrop=(tgt:number)=>{if(draggedIndex===null||!draggingType)return;draggingType==="row"?handleReorderRows(draggedIndex,tgt):handleReorderCols(draggedIndex,tgt);setDraggedIndex(null);setDraggingType(null);} ;
+
+  // update plot
+  useEffect(()=>{
+    if(!editableData) return;
+    const [header,...rows]=editableData;
+    if(!rows.length) return;
+    const timestamps = rows.map(r=>standardizeDate(r[0]));
+    const plot:PlotData={};
+    header.slice(1).forEach((h,ci)=>{
+      plot[h]={timestamp:timestamps,value:rows.map(r=>parseFloat(r[ci+1]||"0"))};
+    });
+    setPlotData(plot);
+  },[editableData,setPlotData]);
+
+  // ────────────────────────────────────────────────
+  // render
+  // ────────────────────────────────────────────────
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border"
-      style={{ height: "450px", width: "100%", maxWidth: "50vw" }} // Fixed box size
-    >
-      {view === "initial" ? (
+    <div ref={containerRef} className="flex-1 bg-panel border-2 border-borderBlue rounded-xl shadow-lg p-4 box-border" style={{height:"450px",width:"100%",maxWidth:"50vw"}}>
+      {/* Initial */}
+      {view==="initial"?(
         <div className="h-full flex flex-col items-center justify-center gap-4">
-          <label
-            htmlFor="csv-upload"
-            className="bg-borderBlue text-white px-6 py-3 rounded-md cursor-pointer hover:bg-blue-600 transition-colors"
-          >
-            Import CSV
-          </label>
-          <input
-            id="csv-upload"
-            type="file"
-            accept=".csv"
-            onChange={handleCSVUpload}
-            className="hidden"
-          />
-          <button
-            onClick={handleCreateCSV}
-            className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors"
-          >
-            Create CSV
-          </button>
+          <button onClick={openApiModal} className="bg-borderBlue text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors">Import by API</button>
+          <label htmlFor="csv-upload" className="bg-borderBlue text-white px-6 py-3 rounded-md cursor-pointer hover:bg-blue-600 transition-colors">Import CSV</label>
+          <input id="csv-upload" type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+          <button onClick={()=>{const blank=Array.from({length:3},()=>new Array(3).fill(""));setEditableData(blank);setView("table");}} className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors">Create CSV</button>
         </div>
-      ) : (
+      ):(
+        /* Table */
         <div className="relative h-full flex flex-col">
-          <div ref={buttonRowRef} className="flex gap-2 mb-4">
-            <button
-              onClick={handleAddRow}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Add Row
-            </button>
-            <button
-              onClick={handleAddColumn}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Add Column
-            </button>
-            <button
-              onClick={handleCancel}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleTransposeCSV}
-              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition-colors"
-            >
-              Flip CSV
-            </button>
-            <button
-              onClick={handleSortAndGroupByDate}
-              className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
-            >
-              Fix Date
-            </button>
+          <div ref={buttonRowRef} className="flex gap-2 mb-4 flex-wrap">
+            <button onClick={handleAddRow} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Add Row</button>
+            <button onClick={handleAddColumn} className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">Add Column</button>
+            <button onClick={handleCancel} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">Cancel</button>
+            <button onClick={handleTranspose} className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition-colors">Flip CSV</button>
+            <button onClick={() => editableData && setEditableData(sortAndGroupByDate(editableData))} className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors">Fix Date</button>
           </div>
-
-          <div
-            className="flex-grow border border-borderBlue rounded-md overflow-hidden"
-            style={{
-              height: `${tableHeight}px`, // Fixed height for the table
-              width: "100%",
-              overflowY: "auto", // Enable vertical scrolling
-              overflowX: "auto",
-            }}
-          >
+          {/* table */}
+          <div className="flex-grow border border-borderBlue rounded-md overflow-hidden" style={{height:`${tableHeight}px`,overflowY:"auto",overflowX:"auto"}}>
             <div className="overflow-x-auto h-full">
               <table className="min-w-max table-auto border-collapse">
                 <thead>
                   <tr>
-                    {editableData?.[0].map((header, columnIndex) => (
-                      <th
-                        key={columnIndex}
-                        className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group"
-                        draggable
-                        onDragStart={() => handleDragStart(columnIndex, "column")}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDrop(columnIndex)}
-                      >
-                        <input
-                          type="text"
-                          value={header}
-                          onChange={(e) => handleEditCell(0, columnIndex, e.target.value)}
-                          className="bg-transparent text-white w-full text-center"
-                        />
-                        <button
-                          className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                          onClick={() => handleDeleteColumn(columnIndex)} // Pass the column index here
-                        >
-                          ✕
-                        </button>
+                    {editableData?.[0].map((h,ci)=>(
+                      <th key={ci} className="border border-borderBlue px-4 py-2 text-white bg-blue-600 top-0 relative group" draggable onDragStart={()=>handleDragStart(ci,"column")} onDragOver={e=>e.preventDefault()} onDrop={()=>handleDrop(ci)}>
+                        <input value={h} onChange={e=>setEditableData(d=>d&&d.map((r,i)=>i===0?r.map((c,j)=>j===ci?e.target.value:c):r))} className="bg-transparent text-white w-full text-center" />
+                        <button className="absolute right-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block" onClick={()=>handleDeleteColumn(ci)}>✕</button>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {editableData?.slice(1).map((row, rowIndex) => (
-                    <tr
-                      key={rowIndex}
-                      className="even:bg-panel odd:bg-black group"
-                      draggable
-                      onDragStart={() => handleDragStart(rowIndex, "row")}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => handleDrop(rowIndex)}
-                    >
-                      {row.map((cell, cellIndex) => (
-                        <td
-                          key={cellIndex}
-                          className="border border-borderBlue px-4 py-2 text-white relative"
-                        >
-                          {cellIndex === 0 && (
-                            <button
-                              className="absolute left-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block"
-                              onClick={() => handleDeleteRow()}
-                            >
-                              ✕
-                            </button>
-                          )}
-                          <input
-                            type="text"
-                            value={cell}
-                            onChange={(e) =>
-                              handleEditCell(rowIndex + 1, cellIndex, e.target.value)
-                            }
-                            className="bg-transparent text-white w-full"
-                          />
+                  {editableData?.slice(1).map((row,ri)=>(
+                    <tr key={ri} className="even:bg-panel odd:bg-black group" draggable onDragStart={()=>handleDragStart(ri,"row")} onDragOver={e=>e.preventDefault()} onDrop={()=>handleDrop(ri)}>
+                      {row.map((cell,ci)=>(
+                        <td key={ci} className="border border-borderBlue px-4 py-2 text-white relative">
+                          {ci===0&&<button className="absolute left-1 top-1/2 transform -translate-y-1/2 text-red-500 hidden group-hover:block" onClick={handleDeleteRow}>✕</button>}
+                          <input value={cell} onChange={e=>setEditableData(d=>{if(!d)return d;const nd=[...d];nd[ri+1][ci]=ci===0?standardizeDate(e.target.value):e.target.value;return nd;})} className="bg-transparent text-white w-full" />
                         </td>
                       ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* API Modal */}
+      {isApiModalOpen&&(
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="relative bg-white text-black rounded-lg shadow-lg p-8 w-[80%] max-w-md">
+            <button onClick={closeApiModal} className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
+            <h3 className="text-xl font-semibold mb-6">Import by API</h3>
+            <div className="mb-4">
+              <label htmlFor="api-input" className="block text-sm font-medium text-gray-700 mb-2">API Endpoint, Dune Query ID, or CSV Text:</label>
+              <textarea id="api-input" rows={4} value={apiInput} onChange={e=>setApiInput(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1234567  (Dune query ID)   OR   https://example.com/data.csv   OR   paste CSV here" />
+            </div>
+            <div className="flex justify-center">
+              <button onClick={handleApiConfirm} className="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition">Confirm</button>
             </div>
           </div>
         </div>
