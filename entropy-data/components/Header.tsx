@@ -208,7 +208,7 @@ const Header: React.FC<HeaderProps> = ({
       const layout = exportLayout;
 
       // Define width, height, scale for ultra high resolution
-      const width = 2000;
+      const width = 3000;
       const height = 1600;
       const scale = 3;
 
@@ -274,7 +274,7 @@ const Header: React.FC<HeaderProps> = ({
       const plotData = plotElement.data;
       const layout = exportLayout;
 
-      const width = 2000;
+      const width = 3000;
       const height = 1600;
       const scale = 3;
 
