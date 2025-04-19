@@ -24,7 +24,6 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   // API import modal
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [apiInput, setApiInput] = useState("");
-  const [duneQueryId, setDuneQueryId] = useState<string | null>(null); // stores the textbox value
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRowRef = useRef<HTMLDivElement | null>(null);
@@ -112,8 +111,6 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
     const input = apiInput.trim();
     if (!input) return alert("Textbox is empty");
 
-    setDuneQueryId(input); // store in variable for reference
-
     try {
       let csvText = "";
 
@@ -170,8 +167,18 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
   const handleCancel = ()=>{setEditableData(null);setPlotData(null);setView("initial");};
     
   const handleDragStart=(idx:number,type:"row"|"column")=>{setDraggedIndex(idx);setDraggingType(type);}  ;
-  const handleDrop=(tgt:number)=>{if(draggedIndex===null||!draggingType)return;draggingType==="row"?handleReorderRows(draggedIndex,tgt):handleReorderCols(draggedIndex,tgt);setDraggedIndex(null);setDraggingType(null);} ;
-
+  const handleDrop = (tgt: number) => {
+    if (draggedIndex === null || !draggingType) return;
+  
+    if (draggingType === "row") {
+      handleReorderRows(draggedIndex, tgt);
+    } else {
+      handleReorderCols(draggedIndex, tgt);
+    }
+  
+    setDraggedIndex(null);
+    setDraggingType(null);
+  };
   // update plot
   useEffect(()=>{
     if(!editableData) return;
@@ -183,7 +190,7 @@ const CSVPanel: React.FC<CSVPanelProps> = ({ setPlotData }) => {
       plot[h]={timestamp:timestamps,value:rows.map(r=>parseFloat(r[ci+1]||"0"))};
     });
     setPlotData(plot);
-  },[editableData,setPlotData]);
+  },[editableData,setPlotData, standardizeDate]);
 
   // ────────────────────────────────────────────────
   // render

@@ -36,11 +36,10 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: { "Content-Type": "text/csv" },
     });
-  } catch (err: any) {
-    console.error(err);
-    return NextResponse.json(
-      { error: err.message || "Failed to fetch from Dune" },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    const message =
+     err instanceof Error ? err.message : "Failed to fetch from Dune";
+   console.error(err);
+   return NextResponse.json({ error: message }, { status: 500 });
   }
 }
