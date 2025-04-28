@@ -29,6 +29,8 @@ const Footer: React.FC<FooterProps> = ({ customization, setCustomization }) => {
               <option value="bar">Bar Chart</option>
               <option value="100%">100% Chart</option>
               <option value="bar-line">Bar and Line Chart</option>
+              <option value="bar-line">Pie Chart</option>
+              <option value="bar-line">PnL Chart</option>
             </select>
           </div>
           <button
